@@ -1,4 +1,4 @@
-# ArcticFox Reference AI — iOS Exploit Development Swarm
+# W0lfSword Reference AI — iOS Exploit Development Swarm
 
 > **λ-neural knowledge mesh for autonomous vulnerability discovery, kernel exploitation, sandbox escape, and iOS security reverse engineering.**
 >
