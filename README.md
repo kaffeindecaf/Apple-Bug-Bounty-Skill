@@ -1,6 +1,6 @@
 # Apple-Bug-Bounty-Skill
 
-iOS exploit development knowledge base. Built from a deep audit of the W0lfSword exploit chain and 11 reference repositories (August 2026). Designed for use with AI coding agents — Claude Code, Cursor, OpenAI Codex, OpenCode, Windsurf, GitHub Copilot, Gemini, Qwen, and Kimi.
+iOS exploit development knowledge base. Built from a deep audit of the W0lfSword exploit chain and 10 reference repositories (August 2026). Designed for use with AI coding agents — Claude Code, Cursor, OpenAI Codex, OpenCode, Windsurf, GitHub Copilot, Gemini, Qwen, and Kimi.
 
 ---
 
@@ -65,7 +65,7 @@ Apple-Bug-Bounty-Skill/
 │   ├── ios-coretrust-bypass.md         # CoreTrust, perma-sign, TrollStore internals
 │   └── ios-research-methodology.md     # Audit protocol, bug classes, learning path
 │
-├── options/                            # 8 output option modules
+├── options/                            # 9 files — options pipeline
 │   ├── SYSTEM.md                       # Options pipeline definition
 │   ├── adhd.md                         # --adhd: ADHD-friendly output
 │   ├── verbose.md                      # --verbose: Maximum detail mode
@@ -76,8 +76,8 @@ Apple-Bug-Bounty-Skill/
 │   ├── fix.md                          # --fix: Bug fixer (chained from --bug)
 │   └── cash.md                         # --cash: Money-focused idea generator
 │
-├── projects/                           # 11 reference exploit repos
-│   ├── W0lfSword/                      # The exploit chain (audited meta-project)
+├── projects/                           # 10 reference exploit repos
+│   ├── W0lfSword/                      # The exploit chain (external — not included)
 │   ├── bad_query/                      # forcequit — container traversal (26-27)
 │   ├── darksword-kexploit/             # opa334 — clean DarkSword CLI
 │   ├── DarkSword-RCE/                  # htimesnine — WebKit→GPU→kernel chain

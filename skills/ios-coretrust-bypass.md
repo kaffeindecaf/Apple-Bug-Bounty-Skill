@@ -1,7 +1,7 @@
 ---
 name: ios-coretrust-bypass
 version: 1.0.0
-agent_compatibility: [claude-code, cursor, codex, opencode, copilot, windsurf]
+agent_compatibility: [claude-code, cursor, codex, opencode, copilot, windsurf, gemini, qwen, kimi]
 token_budget: 8192
 covers: [CoreTrust, AMFI, code signing bypass, perma-sign, TrollStore, fastPathSign, entitlement injection, CMS signature, provisioning]
 platforms: [iOS 14.0-17.0, arm64/arm64e]

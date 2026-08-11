@@ -1,11 +1,11 @@
 # Cursor Rules — Apple-Bug-Bounty-Skill
 
 ## Workspace Configuration
-This workspace contains a curated iOS exploit development knowledge base with 10 specialized skill modules, 4 output options, and 10 reference projects.
+This workspace contains a curated iOS exploit development knowledge base with 10 specialized skill modules, 8 output options, and 10 reference projects.
 
 ## Options Pipeline
 
-Before routing, check the user's prompt for flags: `--adhd`, `--verbose`, `--thinking`, `--new`.
+Before routing, check the user's prompt for flags: `--adhd`, `--verbose`, `--thinking`, `--new`, `--idea`, `--bug`, `--fix`, `--cash`.
 Load `@options/{flag}.md` for each flag. Flags stack.
 
 **Master Router:** `@SKILL.md`

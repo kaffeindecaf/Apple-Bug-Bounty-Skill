@@ -1,7 +1,7 @@
 {
   "name": "apple-bug-bounty-skill",
-  "version": "1.0.0",
-  "description": "iOS exploit development knowledge base with 10 skill modules and options pipeline",
+  "version": "4.0.0",
+  "description": "iOS exploit development knowledge base with 10 skill modules, 8 options, and research-first protocol.",
   "skills_dir": "skills",
   "options_dir": "options",
   "router": "SKILL.md"

@@ -1,7 +1,7 @@
 ---
 name: ios-sandbox-escape
 version: 3.0.0
-agent_compatibility: [claude-code, cursor, codex, opencode, copilot, windsurf]
+agent_compatibility: [claude-code, cursor, codex, opencode, copilot, windsurf, gemini, qwen, kimi]
 token_budget: 8192
 covers: [MAC framework, extension patch, SSV bypass, vnode swap, TCC]
 learns_from:

@@ -1,6 +1,6 @@
 ---
 name: apple-bug-bounty-skill-master-router
-version: 3.0.0
+version: 4.0.0
 description: Master routing skill for the Apple-Bug-Bounty-Skill iOS exploit development knowledge base. Routes questions to the correct specialized skill, enforces research-first behavior, and manages dynamic cross-referencing between all 10 skill modules.
 agent_compatibility: [claude-code, cursor, codex, opencode, copilot, windsurf, gemini, qwen, kimi]
 ---
@@ -59,6 +59,20 @@ User: "--cash --thinking"
 → Load options/cash.md + options/thinking.md
 → Money-focused ideas with deep reasoning for each revenue estimate
 ```
+
+### Disambiguation for Overlapping Triggers
+
+Some trigger words appear in multiple skills. When a trigger matches more than one skill, use additional context to decide:
+
+| Trigger | Skills Matched | Disambiguation |
+|---------|---------------|----------------|
+| "Checkm8" | kernel-exploit, bootchain-exploit | If boot-time patches or IMG4 mentioned → bootchain. If kernel offsets or exploits → kernel. |
+| "SecureROM" | kernel-exploit, bootchain-exploit | If PWN DFU or iBoot mentioned → bootchain. If exploit development → kernel. |
+| "CoreTrust" | security-pentesting, coretrust-bypass | If code signing or perma-sign → coretrust-bypass. If bounty or Frida → security-pentesting. |
+| "TrollStore" | security-pentesting, coretrust-bypass | If internals, fastPathSign, CMS → coretrust-bypass. If general usage or bounty → security-pentesting. |
+| "provisioning" | security-pentesting, coretrust-bypass | If entitlement injection or CoreTrust → coretrust-bypass. If IPA analysis or testing → security-pentesting. |
+
+When in doubt, load both skills. Cross-referencing rules in each skill's YAML frontmatter will ensure the agent loads the correct neighbor.
 
 ---
 

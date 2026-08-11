@@ -1,24 +1,9 @@
 {
   "name": "apple-bug-bounty-skill",
-  "description": "iOS exploit development knowledge base with 10 skill modules, options pipeline, and research-first protocol.",
-  "skills": [
-    "skills/ios-kernel-exploit.md",
-    "skills/ios-sandbox-escape.md",
-    "skills/ios-security-pentesting.md",
-    "skills/ios-misc-tooling.md",
-    "skills/ios-bootchain-exploit.md",
-    "skills/ios-code-injection.md",
-    "skills/ios-webkit-exploit.md",
-    "skills/ios-puaf-exploit.md",
-    "skills/ios-coretrust-bypass.md",
-    "skills/ios-research-methodology.md"
-  ],
+  "version": "4.0.0",
+  "description": "iOS exploit development knowledge base with 10 skill modules, 8 options, and research-first protocol.",
+  "skills_dir": "skills",
+  "options_dir": "options",
   "router": "SKILL.md",
-  "options": {
-    "adhd": "options/adhd.md",
-    "verbose": "options/verbose.md",
-    "thinking": "options/thinking.md",
-    "new": "options/new.md"
-  },
-  "research_first": true
+  "options": ["adhd", "verbose", "thinking", "new", "idea", "bug", "fix", "cash"]
 }

@@ -1,7 +1,7 @@
 # Apple-Bug-Bounty-Skill — Windsurf Rules
 
 ## Workspace Configuration
-This workspace contains a curated iOS exploit development knowledge base with 10 specialized skill modules, 4 output options, and 10 reference projects.
+This workspace contains a curated iOS exploit development knowledge base with 10 specialized skill modules, 8 output options, and 10 reference projects.
 
 ## Options Pipeline (Process Before Routing)
 
@@ -13,6 +13,10 @@ Before routing to a skill, check the user's prompt for option flags:
 | `--verbose` | Maximum detail. Full offsets, code, alternatives, caveats. |
 | `--thinking` | Deep chain-of-thought. Multiple hypotheses before answer. |
 | `--new` | Audit mode. Scan target, find bugs, recommend skills, rank findings. |
+| `--idea` | Project/feature ideas. Empty dir -> project ideas. Code -> feature ideas. |
+| `--bug` | Bug checker. Scans 10 bug classes, writes foundbugs.md, chains to --fix. |
+| `--fix` | Bug fixer. Fixes bugs from foundbugs.md, critical first, asks before next tier. |
+| `--cash` | Money-focused ideas. Ranks by earning potential ($$$/$$/$). |
 
 Load `options/{flag}.md` for the full rules per flag. Flags stack.
 

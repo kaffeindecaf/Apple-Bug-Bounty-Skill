@@ -1,9 +1,11 @@
 ---
 name: ios-research-methodology
 version: 1.0.0
-agent_compatibility: [claude-code, cursor, codex, opencode, copilot, windsurf]
+agent_compatibility: [claude-code, cursor, codex, opencode, copilot, windsurf, gemini, qwen, kimi]
 token_budget: 8192
 covers: [research methodology, bug hunting, code audit, reverse engineering, offset discovery, learning path, getting started]
+learns_from:
+  - docs/researchdeepseek.md
 platforms: [iOS 15.0-27.0, arm64/arm64e, any Apple platform]
 triggers:
   - research
