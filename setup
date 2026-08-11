@@ -18,6 +18,7 @@ NC='\033[0m'
 
 SKILL_DIR="$HOME/.apple-bug-bounty-skill"
 REPO_URL="https://github.com/kaffeindecaf/Apple-Bug-Bounty-Skill.git"
+PROGRESS_WIDTH=30
 
 # ─────────────────────────────────────────────────
 # WOLF BANNER
@@ -60,6 +61,111 @@ spin() {
     done
     printf "\r"
     wait "$pid"
+}
+
+# ─────────────────────────────────────────────────
+# PROGRESS BAR
+# ─────────────────────────────────────────────────
+
+draw_progress_bar() {
+    local current=$1 total=$2 title="$3"
+    local pct=$((current * 100 / total))
+    local filled=$((pct * PROGRESS_WIDTH / 100))
+    local empty=$((PROGRESS_WIDTH - filled))
+    local bar=""
+    local i
+    for ((i = 0; i < filled; i++)); do bar+="█"; done
+    for ((i = 0; i < empty; i++)); do bar+="░"; done
+    printf "\r  [%s] %s %3d%%" "$bar" "$title" "$pct"
+}
+
+# ─────────────────────────────────────────────────
+# GIT CLONE WITH PROGRESS BAR
+# ─────────────────────────────────────────────────
+
+clone_with_progress() {
+    local url="$1" dest="$2"
+    local tmpfile
+    tmpfile=$(mktemp)
+
+    log_info "Cloning $url into $dest ..."
+    echo ""
+
+    git clone --progress --depth 1 "$url" "$dest" 2>"$tmpfile" &
+    local pid=$!
+
+    local chars="/-\|" i=0
+    while kill -0 "$pid" 2>/dev/null; do
+        if [ -f "$tmpfile" ] && [ -s "$tmpfile" ]; then
+            local last_line
+            last_line=$(tail -1 "$tmpfile" 2>/dev/null || true)
+            if [[ "$last_line" =~ ([0-9]+)% ]]; then
+                local pct="${BASH_REMATCH[1]}"
+                draw_progress_bar "$pct" 100 "Cloning"
+            else
+                printf "\r  ${BLUE}[%s]${NC} Cloning..." "${chars:i++%4:1}"
+            fi
+        else
+            printf "\r  ${BLUE}[%s]${NC} Cloning..." "${chars:i++%4:1}"
+        fi
+        sleep 0.15
+    done
+    printf "\r\033[K"
+    wait "$pid"
+    local rc=$?
+    rm -f "$tmpfile"
+    if [ $rc -ne 0 ]; then
+        log_err "Clone failed (exit code: $rc)"
+        return 1
+    fi
+    draw_progress_bar 100 100 "Cloning"
+    echo ""
+    log_ok "Repository cloned successfully"
+    return 0
+}
+
+# ─────────────────────────────────────────────────
+# GIT PULL WITH PROGRESS BAR
+# ─────────────────────────────────────────────────
+
+pull_with_progress() {
+    local workdir="$1"
+    local tmpfile
+    tmpfile=$(mktemp)
+
+    (
+        cd "$workdir"
+        git pull --ff-only origin main 2>"$tmpfile"
+    ) &
+    local pid=$!
+
+    local chars="/-\|" i=0
+    while kill -0 "$pid" 2>/dev/null; do
+        if [ -f "$tmpfile" ] && [ -s "$tmpfile" ]; then
+            local last_line
+            last_line=$(tail -1 "$tmpfile" 2>/dev/null || true)
+            if [[ "$last_line" =~ ([0-9]+)% ]]; then
+                local pct="${BASH_REMATCH[1]}"
+                draw_progress_bar "$pct" 100 "Updating"
+            else
+                printf "\r  ${BLUE}[%s]${NC} Updating..." "${chars:i++%4:1}"
+            fi
+        else
+            printf "\r  ${BLUE}[%s]${NC} Updating..." "${chars:i++%4:1}"
+        fi
+        sleep 0.15
+    done
+    printf "\r\033[K"
+    wait "$pid"
+    local rc=$?
+    rm -f "$tmpfile"
+    if [ $rc -ne 0 ]; then
+        log_warn "Pull may have had issues (exit code: $rc), continuing"
+    fi
+    draw_progress_bar 100 100 "Updating"
+    echo ""
+    log_ok "Repository updated"
+    return 0
 }
 
 # ─────────────────────────────────────────────────
@@ -171,13 +277,16 @@ detect_agents() {
     fi
 
     # OpenCode
+    local opencode_found=false opencode_version="unknown"
     if command -v opencode &>/dev/null; then
+        opencode_version=$(opencode --version 2>/dev/null || echo "unknown")
         AGENTS+=("opencode")
         AGENT_NAMES["opencode"]="OpenCode"
         AGENT_CONFIGS["opencode"]="opencode.json"
         AGENT_PATHS["opencode"]="$SKILL_DIR"
-        AGENT_DETECT["opencode"]="cli at: $(command -v opencode)"
+        AGENT_DETECT["opencode"]="cli at: $(command -v opencode) (v${opencode_version})"
         log_ok "OpenCode detected — ${AGENT_DETECT["opencode"]}"
+        opencode_found=true
     else
         log_info "OpenCode not detected (see: https://opencode.ai)"
     fi
@@ -296,6 +405,67 @@ select_agents() {
 }
 
 # ─────────────────────────────────────────────────
+# OPencode SKILL SETUP
+# ─────────────────────────────────────────────────
+
+setup_opencode_skills() {
+    log_step "Setting Up OpenCode Skill Discovery"
+    log_info "OpenCode discovers skills from .opencode/skills/<name>/SKILL.md"
+    log_info "Creating symlinks for project-local skill discovery..."
+
+    local skills_dir="$SKILL_DIR/.opencode/skills"
+    rm -rf "$skills_dir"
+    mkdir -p "$skills_dir"
+
+    # Map of skill name -> relative path to the actual skill file
+    declare -A SKILL_MAP
+    SKILL_MAP["master-router"]="$SKILL_DIR/SKILL.md"
+    SKILL_MAP["ios-kernel-exploit"]="$SKILL_DIR/skills/ios-kernel-exploit.md"
+    SKILL_MAP["ios-sandbox-escape"]="$SKILL_DIR/skills/ios-sandbox-escape.md"
+    SKILL_MAP["ios-security-pentesting"]="$SKILL_DIR/skills/ios-security-pentesting.md"
+    SKILL_MAP["ios-misc-tooling"]="$SKILL_DIR/skills/ios-misc-tooling.md"
+    SKILL_MAP["ios-bootchain-exploit"]="$SKILL_DIR/skills/ios-bootchain-exploit.md"
+    SKILL_MAP["ios-code-injection"]="$SKILL_DIR/skills/ios-code-injection.md"
+    SKILL_MAP["ios-webkit-exploit"]="$SKILL_DIR/skills/ios-webkit-exploit.md"
+    SKILL_MAP["ios-puaf-exploit"]="$SKILL_DIR/skills/ios-puaf-exploit.md"
+    SKILL_MAP["ios-coretrust-bypass"]="$SKILL_DIR/skills/ios-coretrust-bypass.md"
+    SKILL_MAP["ios-research-methodology"]="$SKILL_DIR/skills/ios-research-methodology.md"
+
+    local total=${#SKILL_MAP[@]}
+    local count=0
+
+    for name in "${!SKILL_MAP[@]}"; do
+        local src="${SKILL_MAP[$name]}"
+        local dstdir="$skills_dir/$name"
+        mkdir -p "$dstdir"
+
+        if [ -f "$src" ]; then
+            ln -sf "$src" "$dstdir/SKILL.md"
+            count=$((count + 1))
+            draw_progress_bar "$count" "$total" "Linking skills"
+        else
+            log_warn "Skill source not found: $src"
+        fi
+    done
+
+    echo ""
+    log_ok "Created $count OpenCode skill symlinks in $skills_dir"
+
+    # Back up existing opencode.json at the target if it exists
+    local target_json="$SKILL_DIR/opencode.json"
+    if [ -f "$target_json" ]; then
+        local backup="$target_json.bak.$(date +%s)"
+        cp "$target_json" "$backup"
+        log_info "Backed up existing opencode.json to $backup"
+    fi
+
+    # Ensure opencode.json at the target has valid format
+    # The repo's opencode.json is already valid (just $schema)
+    # Skills are auto-discovered from .opencode/skills/ — no extra config needed
+    log_ok "OpenCode skill discovery configured"
+}
+
+# ─────────────────────────────────────────────────
 # SKILL INSTALLATION
 # ─────────────────────────────────────────────────
 
@@ -304,20 +474,20 @@ clone_or_update_repo() {
 
     if [ -d "$SKILL_DIR/.git" ]; then
         log_info "Repository exists at $SKILL_DIR"
-        log_info "Pulling latest changes..."
-        (
-            cd "$SKILL_DIR"
-            git pull --ff-only origin main 2>&1 | while IFS= read -r line; do
-                log_info "  git: $line"
-            done
-        )
-        log_ok "Repository updated"
+        pull_with_progress "$SKILL_DIR"
     else
-        log_info "Cloning into $SKILL_DIR..."
-        git clone --depth 1 "$REPO_URL" "$SKILL_DIR" 2>&1 | while IFS= read -r line; do
-            log_info "  git: $line"
-        done
-        log_ok "Repository cloned"
+        # Handle interrupted clone — remove stale dir without .git
+        if [ -d "$SKILL_DIR" ]; then
+            log_warn "$SKILL_DIR exists but is not a git repository"
+            read -rp "  Remove it and re-clone? [Y/n] " answer
+            if [[ "$answer" =~ ^[Nn] ]]; then
+                log_err "Cannot continue with a non-git directory. Aborting."
+                exit 1
+            fi
+            rm -rf "$SKILL_DIR"
+            log_info "Removed stale directory"
+        fi
+        clone_with_progress "$REPO_URL" "$SKILL_DIR"
     fi
 
     log_info "Verifying repository integrity..."
@@ -336,22 +506,39 @@ clone_or_update_repo() {
         "skills/ios-coretrust-bypass.md"
         "skills/ios-research-methodology.md"
     )
+
+    local total_verify=${#required[@]}
+    local verify_count=0
+    local verify_errors=0
+
     for f in "${required[@]}"; do
         if [ -f "$SKILL_DIR/$f" ]; then
-            log_ok "Found: $f"
+            verify_count=$((verify_count + 1))
         else
             log_err "Missing: $f — repository may be corrupted"
+            verify_errors=$((verify_errors + 1))
         fi
+        draw_progress_bar "$verify_count" "$total_verify" "Verifying"
     done
+    echo ""
+
+    if [ "$verify_errors" -gt 0 ]; then
+        log_warn "$verify_errors file(s) missing"
+    else
+        log_ok "All $total_verify required files verified"
+    fi
 }
 
 configure_agent() {
     local agent="$1"
+    local total="$2"
+    local idx="$3"
     local name="${AGENT_NAMES[$agent]}"
     local config="${AGENT_CONFIGS[$agent]}"
     local path="${AGENT_PATHS[$agent]}"
 
-    log_step "Configuring $name"
+    draw_progress_bar "$idx" "$total" "Configuring $name"
+    echo ""
 
     local src="$SKILL_DIR/$config"
     if [ ! -f "$src" ]; then
@@ -381,7 +568,8 @@ configure_agent() {
             ;;
 
         opencode)
-            log_info "OpenCode auto-loads opencode.json from the project root."
+            log_info "OpenCode discovers skills from .opencode/skills/<name>/SKILL.md"
+            log_info "Skills are symlinked from the project's skills/ directory"
             log_info "cd $SKILL_DIR && opencode to start."
             ;;
 
@@ -422,28 +610,27 @@ verify_setup() {
     for agent in "${SELECTED_AGENTS[@]}"; do
         local name="${AGENT_NAMES[$agent]}"
         local config="${AGENT_CONFIGS[$agent]}"
-        local path="${AGENT_PATHS[$agent]}"
 
         case "$agent" in
             claude)
                 if [ -f "$HOME/.claude/instructions.md" ]; then
-                    printf "  ${GREEN}✓${NC} %-25s %s\n" "$name" "$HOME/.claude/instructions.md"
+                    printf "  ${GREEN}\xE2\x9C\x93${NC} %-25s %s\n" "$name" "$HOME/.claude/instructions.md"
                 else
-                    printf "  ${RED}✗${NC} %-25s %s\n" "$name" "config missing"
+                    printf "  ${RED}\xE2\x9C\x97${NC} %-25s %s\n" "$name" "config missing"
                 fi
                 ;;
             cursor|windsurf|opencode|qwen|kimi|gemini|copilot)
                 if [ -f "$SKILL_DIR/$config" ]; then
-                    printf "  ${GREEN}✓${NC} %-25s %s\n" "$name" "$SKILL_DIR/$config"
+                    printf "  ${GREEN}\xE2\x9C\x93${NC} %-25s %s\n" "$name" "$SKILL_DIR/$config"
                 else
-                    printf "  ${RED}✗${NC} %-25s %s\n" "$name" "config missing"
+                    printf "  ${RED}\xE2\x9C\x97${NC} %-25s %s\n" "$name" "config missing"
                 fi
                 ;;
             codex)
                 if [ -f "$HOME/.codex/instructions.md" ]; then
-                    printf "  ${GREEN}✓${NC} %-25s %s\n" "$name" "$HOME/.codex/instructions.md"
+                    printf "  ${GREEN}\xE2\x9C\x93${NC} %-25s %s\n" "$name" "$HOME/.codex/instructions.md"
                 else
-                    printf "  ${RED}✗${NC} %-25s %s\n" "$name" "config missing"
+                    printf "  ${RED}\xE2\x9C\x97${NC} %-25s %s\n" "$name" "config missing"
                 fi
                 ;;
         esac
@@ -451,10 +638,17 @@ verify_setup() {
 
     echo ""
     echo -e "  ${BOLD}Skill files:${NC}"
-    local skill_count=$(find "$SKILL_DIR/skills" -name "*.md" -type f 2>/dev/null | wc -l | tr -d ' ')
-    local option_count=$(find "$SKILL_DIR/options" -name "*.md" -type f 2>/dev/null | wc -l | tr -d ' ')
-    printf "  ${GREEN}✓${NC} %-25s %d skills loaded\n" "Skill modules:" "$skill_count"
-    printf "  ${GREEN}✓${NC} %-25s %d options available\n" "Output options:" "$option_count"
+    local skill_count
+    skill_count=$(find "$SKILL_DIR/skills" -name "*.md" -type f 2>/dev/null | wc -l | tr -d ' ')
+    local option_count
+    option_count=$(find "$SKILL_DIR/options" -name "*.md" -type f 2>/dev/null | wc -l | tr -d ' ')
+    local opencode_skill_count=0
+    if [ -d "$SKILL_DIR/.opencode/skills" ]; then
+        opencode_skill_count=$(find "$SKILL_DIR/.opencode/skills" -name "SKILL.md" -type l 2>/dev/null | wc -l | tr -d ' ')
+    fi
+    printf "  ${GREEN}\xE2\x9C\x93${NC} %-25s %d skills loaded\n" "Skill modules:" "$skill_count"
+    printf "  ${GREEN}\xE2\x9C\x93${NC} %-25s %d options available\n" "Output options:" "$option_count"
+    printf "  ${GREEN}\xE2\x9C\x93${NC} %-25s %d OpenCode skills linked\n" "OpenCode discovery:" "$opencode_skill_count"
 
     echo ""
     echo -e "  ${BOLD}Quick test commands:${NC}"
@@ -463,7 +657,7 @@ verify_setup() {
             claude)   echo -e "    ${CYAN}claude${NC} \"Load ios-kernel-exploit skill\"" ;;
             cursor)   echo -e "    ${CYAN}cursor${NC} $SKILL_DIR   (open workspace)" ;;
             codex)    echo -e "    ${CYAN}codex${NC} --instructions $HOME/.codex/instructions.md" ;;
-            opencode) echo -e "    ${CYAN}opencode${NC}                                       (cd $SKILL_DIR first)" ;;
+            opencode) echo -e "    ${CYAN}opencode${NC} $SKILL_DIR                        (skills auto-discovered)" ;;
             windsurf) echo -e "    ${CYAN}windsurf${NC} $SKILL_DIR    (open workspace)" ;;
             *)        echo -e "    ${CYAN}$agent${NC}: config ready at $SKILL_DIR/$config" ;;
         esac
@@ -476,9 +670,9 @@ verify_setup() {
 
 show_summary() {
     echo ""
-    echo -e "${BOLD}${GREEN}╔══════════════════════════════════════════════╗${NC}"
-    echo -e "${BOLD}${GREEN}║          Setup Complete                      ║${NC}"
-    echo -e "${BOLD}${GREEN}╚══════════════════════════════════════════════╝${NC}"
+    echo -e "${BOLD}${GREEN}\xE2\x95\x94\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x97${NC}"
+    echo -e "${BOLD}${GREEN}\xE2\x95\x91          Setup Complete                      \xE2\x95\x91${NC}"
+    echo -e "${BOLD}${GREEN}\xE2\x95\x9A\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x9D${NC}"
     echo ""
     echo -e "  Skills location: ${CYAN}$SKILL_DIR${NC}"
     echo -e "  Agents configured: ${GREEN}${#SELECTED_AGENTS[@]}${NC}"
@@ -489,7 +683,7 @@ show_summary() {
     echo -e "    ${YELLOW}--thinking${NC}   Deep chain-of-thought, multiple hypotheses"
     echo -e "    ${YELLOW}--new${NC}        Audit mode, rank findings critical-to-low"
     echo -e "    ${YELLOW}--idea${NC}       Project/feature idea generator"
-    echo -e "    ${YELLOW}--bug${NC}        Bug checker → writes foundbugs.md"
+    echo -e "    ${YELLOW}--bug${NC}        Bug checker -> writes foundbugs.md"
     echo -e "    ${YELLOW}--fix${NC}        Bug fixer (chained from --bug)"
     echo -e "    ${YELLOW}--cash${NC}       Money-focused ideas + career paths"
     echo ""
@@ -525,9 +719,34 @@ main() {
 
     clone_or_update_repo
 
+    # Set up OpenCode skill discovery if OpenCode is selected
+    local opencode_selected=false
     for agent in "${SELECTED_AGENTS[@]}"; do
-        configure_agent "$agent"
+        if [ "$agent" = "opencode" ]; then
+            opencode_selected=true
+            break
+        fi
     done
+    if $opencode_selected; then
+        setup_opencode_skills
+    fi
+
+    # Configure each agent with progress
+    echo ""
+    log_step "Configuring Agents"
+    echo ""
+
+    local total_agents=${#SELECTED_AGENTS[@]}
+    local agent_idx=0
+
+    for agent in "${SELECTED_AGENTS[@]}"; do
+        agent_idx=$((agent_idx + 1))
+        configure_agent "$agent" "$total_agents" "$agent_idx"
+    done
+
+    draw_progress_bar "$total_agents" "$total_agents" "All agents configured"
+    echo ""
+    echo ""
 
     verify_setup
     show_summary

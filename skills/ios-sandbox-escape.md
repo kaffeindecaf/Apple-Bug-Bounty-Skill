@@ -1,5 +1,6 @@
 ---
 name: ios-sandbox-escape
+description: "Use for iOS sandbox escape techniques including MAC framework, SSV bypass, TCC, vnode, MIG, extension patching, and path traversal."
 version: 3.0.0
 agent_compatibility: [claude-code, cursor, codex, opencode, copilot, windsurf, gemini, qwen, kimi]
 token_budget: 8192

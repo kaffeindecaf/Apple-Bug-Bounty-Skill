@@ -1,5 +1,6 @@
 ---
 name: ios-code-injection
+description: "Use for iOS code injection including ROP/JOP chains, dylib injection, shellcode, PAC forging, and gadget chain construction."
 version: 1.0.0
 agent_compatibility: [claude-code, cursor, codex, opencode, copilot, windsurf, gemini, qwen, kimi]
 token_budget: 9216

@@ -49,3 +49,8 @@ obj/
 
 # Bug tracking (user-generated — NOT versioned)
 foundbugs.md
+
+# OpenCode generated (created by ./setup)
+.opencode/
+opencode.json.backup
+*.bak.*

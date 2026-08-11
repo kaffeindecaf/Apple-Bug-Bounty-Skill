@@ -1,5 +1,6 @@
 ---
 name: ios-misc-tooling
+description: "Use for iOS tooling and workflow including Theos, ldid, deploy, kernelcache, libimobiledevice, crash logs, and device management."
 version: 3.0.0
 agent_compatibility: [claude-code, cursor, codex, opencode, copilot, windsurf, gemini, qwen, kimi]
 token_budget: 11264

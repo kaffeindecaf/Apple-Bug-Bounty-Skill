@@ -1,5 +1,6 @@
 ---
 name: ios-research-methodology
+description: "Use for iOS exploit research methodology including bug classes, audit protocols, learning paths, and tool references."
 version: 1.0.0
 agent_compatibility: [claude-code, cursor, codex, opencode, copilot, windsurf, gemini, qwen, kimi]
 token_budget: 8192

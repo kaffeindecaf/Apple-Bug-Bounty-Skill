@@ -1,5 +1,6 @@
 ---
 name: ios-coretrust-bypass
+description: "Use for iOS CoreTrust bypass including fastPathSign, CMS signature, perma-sign, AMFI userspace bypass, and TrollStore internals."
 version: 1.0.0
 agent_compatibility: [claude-code, cursor, codex, opencode, copilot, windsurf, gemini, qwen, kimi]
 token_budget: 8192

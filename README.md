@@ -44,7 +44,7 @@ Open your agent and start using the skills. No special import needed — agents 
 # Claude Code (auto-discovers .claude/instructions.md)
 claude "How do I escape the iOS sandbox on version 26?"
 
-# OpenCode (auto-loads opencode.json)
+# OpenCode (auto-discovers .opencode/skills/<name>/SKILL.md)
 opencode "Load ios-kernel-exploit skill and analyze this kernel panic"
 
 # Cursor / Windsurf (open this directory as a workspace)
@@ -83,7 +83,9 @@ codex                           # Auto-discovers .codex.md
 
 #### OpenCode
 ```bash
-opencode                        # Auto-loads opencode.json
+# The setup script creates .opencode/skills/ with symlinks to all skill files
+# OpenCode auto-discovers skills from this directory
+opencode                        # Skills auto-discovered from .opencode/skills/
 ```
 
 #### Gemini / Qwen / Kimi
@@ -204,7 +206,7 @@ From `docs/researchdeepseek.md` — 31 findings from a systematic audit:
 | Claude Code | `.claude/instructions.md` | Yes |
 | Cursor | `.cursorrules` | Yes |
 | OpenAI Codex | `.codex.md` | Yes |
-| OpenCode | `opencode.json` | Yes |
+| OpenCode | `opencode.json` + `.opencode/skills/` | Yes (skill dirs auto-discovered) |
 | Windsurf | `.windsurfrules` | Yes |
 | GitHub Copilot | `.github/copilot-instructions.md` | Yes |
 | Google Gemini | `GEMINI.md` | Manual import |
@@ -221,7 +223,7 @@ cd projects/
 git submodule add https://github.com/author/new-exploit.git
 ```
 
-Add a new skill — create a markdown file in `skills/` with YAML frontmatter, trigger words, cross-reference rules, and `research_first: true`. Register it in `SKILL.md`, `opencode.json`, and the agent config files.
+Add a new skill — create a markdown file in `skills/` with YAML frontmatter (include `name` and `description` for OpenCode compatibility), trigger words, cross-reference rules, and `research_first: true`. Register it in `SKILL.md`, the agent config files, and re-run `./setup` to regenerate OpenCode symlinks.
 
 ---
 
