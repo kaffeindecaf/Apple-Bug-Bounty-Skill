@@ -23,11 +23,17 @@ cd Apple-Bug-Bounty-Skill
 
 ### 2. Run the interactive setup
 
+**Linux / macOS:**
 ```bash
 ./setup
 ```
 
-The setup script works on Linux and macOS. It detects which AI agents you have installed and configures them automatically. Choose one agent or all of them.
+**Windows (PowerShell):**
+```powershell
+.\setup.ps1
+```
+
+The setup script detects which AI agents you have installed and configures them automatically. Choose one agent or all of them.
 
 ### 3. Start asking questions
 
