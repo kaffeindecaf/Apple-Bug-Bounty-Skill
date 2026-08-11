@@ -52,15 +52,18 @@ opencode "Load ios-kernel-exploit skill and analyze this kernel panic"
 ```
 Apple-Bug-Bounty-Skill/
 │
-├── README.md                          # ← YOU ARE HERE (central synapse)
+├── SKILL.md                            # Master router — research-first protocol, dynamic routing
 │
-├── skills/                            # 4 Agent Skill Modules
-│   ├── ios-kernel-exploit.md          # Mem: KASLR/PAC/SMR/IOKit/OOB/Checkm8
-│   ├── ios-sandbox-escape.md          # Mem: MAC-fw/ext-patch/SSV/vnode/TCC
-│   ├── ios-security-pentesting.md     # Mem: AMFI/CoreTrust/Frida/bounty-meta
-│   └── ios-misc-tooling.md            # Mem: Theos/build/deploy/debug/devices
+├── skills/                             # 7 Agent Skill Modules
+│   ├── ios-kernel-exploit.md           # Mem: KASLR/PAC/SMR/IOKit/OOB/Checkm8
+│   ├── ios-sandbox-escape.md           # Mem: MAC-fw/ext-patch/SSV/vnode/TCC
+│   ├── ios-security-pentesting.md      # Mem: AMFI/CoreTrust/Frida/bounty-meta
+│   ├── ios-misc-tooling.md             # Mem: Theos/build/deploy/debug/devices
+│   ├── ios-bootchain-exploit.md        # Mem: Checkm8/IMG4/DeviceTree/trust-cache
+│   ├── ios-code-injection.md           # Mem: ROP/dylib-inject/shellcode/PAC-forge
+│   └── ios-research-methodology.md     # Mem: audit-protocol/bug-classes/learning-path
 │
-├── projects/                          # 10 reference exploit repos
+├── projects/                           # 10 reference exploit repos
 │   ├── bad_query/                     # forcequitOS — container traversal (26-27)
 │   ├── darksword-kexploit/            # opa334 — clean DarkSword CLI
 │   ├── DarkSword-RCE/                 # htimesnine — WebKit→GPU→kernel chain
@@ -84,38 +87,55 @@ Apple-Bug-Bounty-Skill/
 
 ---
 
-## Agent Skills — Routing Matrix
+## Dynamic Skill System — Research-First Swarm
 
-| Skill File                          | Mem Tokens | Agent Trigger Phrases                                                                                                   |
-| ----------------------------------- | ---------- | ----------------------------------------------------------------------------------------------------------------------- |
-| `skills/ios-kernel-exploit.md`      | ~8K        | "kernel exploit," "PAC bypass," "IOSurface race," "Checkm8," "kalloc heap spray," "SMR pointer," "IKOT," "PFZ bypass"   |
-| `skills/ios-sandbox-escape.md`      | ~8K        | "sandbox escape," "SSV write," "TCC.db," "vnode redirect," "containermanagerd," "MIG bypass," "extension patch"         |
-| `skills/ios-security-pentesting.md` | ~9K        | "bug bounty," "Frida hook," "SSL pinning," "AMFI flag," "CoreTrust," "Mach-O reverse," "entitlement," "TrollStore sign" |
-| `skills/ios-misc-tooling.md`        | ~11K       | "Theos build," "deploy to device," "kernelcache extract," "libimobiledevice," "ssh ios," "dpkg-deb," "idevice_id"       |
+Skills are not isolated. Each one knows which other skills to load when a conversation drifts across domains. The master `SKILL.md` enforces a **research-first protocol**: if a user mentions a URL, GitHub repo, CVE, or unknown tool, the agent pauses, fetches the source, and analyzes it before answering.
+
+### Routing Matrix (7 Skills + Master Router)
+
+| Skill File | Tokens | Domain & Trigger Phrases |
+|-----------|--------|--------------------------|
+| `SKILL.md` | ~4K | Master router — loads on every session. Enforces research-first, routes to sub-skills. |
+| `skills/ios-kernel-exploit.md` | ~8K | Kernel exploitation — "PAC bypass," "IOSurface race," "socket spray," "SMR pointer," "KASLR" |
+| `skills/ios-sandbox-escape.md` | ~8K | Sandbox escape — "SSV write," "TCC.db," "vnode redirect," "MIG bypass," "extension patch" |
+| `skills/ios-security-pentesting.md` | ~9K | Security testing — "bug bounty," "Frida hook," "AMFI flag," "CoreTrust," "TrollStore" |
+| `skills/ios-misc-tooling.md` | ~11K | Tooling & workflow — "Theos build," "deploy to device," "kernelcache extract," "SSH iOS" |
+| `skills/ios-bootchain-exploit.md` | ~10K | Bootchain — "Checkm8," "SecureROM," "IMG4," "PWN DFU," "trust cache," "DeviceTree" |
+| `skills/ios-code-injection.md` | ~9K | Code injection — "ROP chain," "dylib injection," "shellcode," "PAC forge," "remote thread" |
+| `skills/ios-research-methodology.md` | ~8K | Research — "how to find bugs," "audit protocol," "learning path," "getting started" |
+
+### Cross-Reference Rules
+
+Every skill has `cross_reference_rules` in its YAML frontmatter. Examples:
+- `ios-kernel-exploit` → if sandbox escape comes up → load `ios-sandbox-escape`
+- `ios-sandbox-escape` → if kernel offsets are needed → load `ios-kernel-exploit`
+- `ios-code-injection` → if trust cache / AMFI needed → load `ios-bootchain-exploit`
+- `ios-research-methodology` → if a specific bug class is found → load the domain skill
 
 ### YAML Frontmatter (Machine-Readable)
 
-Every skill file now carries structured metadata for agent parsers:
+Every skill file carries structured metadata including cross-reference rules and the research-first flag:
 
 ```yaml
 ---
 name: ios-kernel-exploit
-version: 2.1.0
+version: 3.0.0
 agent_compatibility: [claude-code, cursor, codex, opencode, copilot, windsurf]
 token_budget: 8192
-covers: [kernel R/W, PAC/SMR, socket spray, IOSurface, Checkm8, offsets]
-platforms: [ios 15.0-27.0, arm64/arm64e, A10-A18 Pro, M1-M4]
+cross_reference_rules:
+  - If sandbox escape or SSV bypass is discussed → load ios-sandbox-escape
+  - If bootchain/Checkm8 patches are discussed → load ios-bootchain-exploit
+  - If ROP or code injection is needed → load ios-code-injection
+research_first: true
 triggers:
   - kernel exploit
   - PAC bypass
   - IOSurface race
   - KASLR bypass
-  - kalloc zone corruption
-  - ICMPv6 socket spray
-  - physical OOB
 related_skills:
   - sandbox-escape
-  - security-pentesting
+  - bootchain-exploit
+  - code-injection
   - misc-tooling
 ---
 ```

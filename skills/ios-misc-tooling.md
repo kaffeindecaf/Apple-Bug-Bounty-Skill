@@ -1,6 +1,6 @@
 ---
 name: ios-misc-tooling
-version: 2.1.0
+version: 3.0.0
 agent_compatibility: [claude-code, cursor, codex, opencode, copilot, windsurf]
 token_budget: 11264
 covers: [Theos, ldid, deploy, kernelcache, libimobiledevice, device management]
@@ -22,6 +22,17 @@ related_skills:
   - ios-kernel-exploit
   - ios-sandbox-escape
   - ios-security-pentesting
+  - ios-bootchain-exploit
+  - ios-code-injection
+  - ios-research-methodology
+cross_reference_rules:
+  - If kernel offsets or exploit building → load ios-kernel-exploit
+  - If deploying sandbox escape tools → load ios-sandbox-escape
+  - If deploying bootchain components → load ios-bootchain-exploit
+  - If signing code injection payloads → load ios-code-injection
+  - If bug bounty testing setup → load ios-security-pentesting
+  - If research methodology is asked → load ios-research-methodology
+research_first: true
 ---
 
 # iOS Exploit Development — Tooling & Workflow
@@ -45,6 +56,25 @@ Use when the task involves:
 - CI/CD for iOS exploit development
 - Multi-device workflow management
 - Post-exploitation tooling (file transfer, VNC, networking)
+
+---
+
+## DYNAMIC CROSS-REFERENCE NOTICE
+
+This skill is the tooling backbone of the W0lfSword swarm. It touches every domain. When the conversation shifts to specifics, load the domain skill:
+
+- **Kernel exploitation** (what you are building/deploying) → load `ios-kernel-exploit.md`
+- **Sandbox escape** (what the tweak does after deployment) → load `ios-sandbox-escape.md`
+- **Bootchain** (patching and deploying kernel/DeviceTree) → load `ios-bootchain-exploit.md`
+- **Code injection** (ROP payload signing and deployment) → load `ios-code-injection.md`
+- **Security testing** (Frida setup, IPA analysis tooling) → load `ios-security-pentesting.md`
+- **Research methodology** (how to approach the problem systematically) → load `ios-research-methodology.md`
+
+---
+
+## RESEARCH-FIRST DIRECTIVE
+
+If the user mentions a new build tool, a new deployment method, a new kernelcache extraction technique, or any external tool — **pause and research it before answering.** Fetch the tool's repo, read the README, understand the workflow. Then formulate your response.
 
 ---
 

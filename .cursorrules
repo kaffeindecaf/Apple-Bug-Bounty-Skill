@@ -1,38 +1,47 @@
 # Cursor Rules — W0lfSword iOS Exploit Knowledge Base
 
 ## Workspace Configuration
-This workspace contains a curated iOS exploit development knowledge base.
-Skills are in `skills/` and research docs in `docs/`.
+This workspace contains a curated iOS exploit development knowledge base with 7 specialized skill modules, a master router, and 10 reference projects.
+
+## Master Router
+Load `SKILL.md` first — it enforces the research-first protocol and dynamic skill routing.
 
 ## Context Injection Rules
 
 ### Auto-load these files when relevant keywords appear:
 
-**Kernel Exploitation** (PAC, SMR, IOSurface, KASLR, socket spray, offsets, Checkm8, PPL):
-→ Always include `@skills/ios-kernel-exploit.md`
+**Master Router:** `@SKILL.md`
+→ Always load first for routing logic and research directives
 
-**Sandbox Escape** (SSV, TCC, vnode, containermanagerd, MAC framework, MIG bypass, path traversal):
-→ Always include `@skills/ios-sandbox-escape.md`
+**Kernel Exploitation** (PAC, SMR, IOSurface, KASLR, socket spray, offsets, Checkm8, PPL):
+→ `@skills/ios-kernel-exploit.md`
+
+**Sandbox Escape** (SSV, TCC, vnode, containermanagerd, MAC framework, MIG bypass):
+→ `@skills/ios-sandbox-escape.md`
 
 **Security Testing** (Frida, AMFI, CoreTrust, code signing, bug bounty, YARA, SSL pinning):
-→ Always include `@skills/ios-security-pentesting.md`
+→ `@skills/ios-security-pentesting.md`
 
-**Tooling & Build** (Theos, ldid, libimobiledevice, kernelcache, deploy, dpkg-deb):
-→ Always include `@skills/ios-misc-tooling.md`
+**Tooling & Build** (Theos, ldid, libimobiledevice, kernelcache, deploy):
+→ `@skills/ios-misc-tooling.md`
 
-**Research & Findings** (bounty reports, exploit architecture, deep dive):
-→ Always include `@docs/researchdeepseek.md`
+**Bootchain Exploitation** (Checkm8, SecureROM, iBoot, IMG4, PWN DFU, trust cache, DeviceTree):
+→ `@skills/ios-bootchain-exploit.md`
+
+**Code Injection** (ROP, JOP, dylib injection, shellcode, PAC forging, remote threads):
+→ `@skills/ios-code-injection.md`
+
+**Research Methodology** (bug hunting, audit protocol, learning path, getting started):
+→ `@skills/ios-research-methodology.md`
+
+## Dynamic Cross-Referencing
+Skills reference each other via `cross_reference_rules`. When one skill is loaded and the topic drifts, load the next skill automatically.
+
+## Research-First Rule
+If the user mentions a URL, GitHub repo, CVE, or unknown tool — fetch and analyze it before answering. Never guess.
 
 ## Offsets Rule
-Never hallucinate iOS kernel struct offsets. Always reference the skill files or suggest offset discovery methods (KDK, XPF, runtime validation).
+Never hallucinate iOS kernel struct offsets. Always reference the skill files or suggest offset discovery methods.
 
 ## Citation Format
 When answering, cite the skill file and section: `skills/ios-kernel-exploit.md §3.1`
-
-## Project Structure
-- `skills/` — 4 AI agent skill files with YAML frontmatter
-- `projects/` — 10 reference exploit repositories
-- `docs/` — Research documents and findings
-- `.claude/` — Claude Code configuration
-- `.codex.md` — OpenAI Codex configuration
-- `opencode.json` — OpenCode configuration

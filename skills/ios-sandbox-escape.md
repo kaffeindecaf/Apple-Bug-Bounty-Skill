@@ -1,6 +1,6 @@
 ---
 name: ios-sandbox-escape
-version: 2.1.0
+version: 3.0.0
 agent_compatibility: [claude-code, cursor, codex, opencode, copilot, windsurf]
 token_budget: 8192
 covers: [MAC framework, extension patch, SSV bypass, vnode swap, TCC]
@@ -21,6 +21,17 @@ related_skills:
   - ios-kernel-exploit
   - ios-security-pentesting
   - ios-misc-tooling
+  - ios-bootchain-exploit
+  - ios-code-injection
+  - ios-research-methodology
+cross_reference_rules:
+  - If kernel offsets or PAC/SMR are needed → load ios-kernel-exploit
+  - If boot-time sandbox patches are discussed → load ios-bootchain-exploit
+  - If code injection into sandboxed apps → load ios-code-injection
+  - If bug bounty reporting or Frida testing → load ios-security-pentesting
+  - If tooling/build/deploy questions arise → load ios-misc-tooling
+  - If research methodology is asked → load ios-research-methodology
+research_first: true
 ---
 
 # iOS Sandbox Escape & Filesystem Bypass
@@ -44,6 +55,24 @@ Use when the task involves:
 - TCC (Transparency, Consent, Control) database manipulation
 - MobileGestalt cache modification
 - Filesystem permission analysis
+
+---
+
+## DYNAMIC CROSS-REFERENCE NOTICE
+
+This skill is one node in the W0lfSword swarm. The conversation may shift domains. When it does, you MUST load the neighboring skill:
+
+- **Kernel exploitation** (offsets, PAC/SMR, K-R/W primitives needed for kernel-based escapes) → load `ios-kernel-exploit.md`
+- **Bootchain sandbox patches** (boot-time sandbox hook NOPs via Checkm8) → load `ios-bootchain-exploit.md`
+- **Code injection** (injecting into sandboxed processes after escape) → load `ios-code-injection.md`
+- **Tooling & workflow** (build, deploy, kernelcache, device management) → load `ios-misc-tooling.md`
+- **Research methodology** (bug hunting, audit protocol, learning path) → load `ios-research-methodology.md`
+
+---
+
+## RESEARCH-FIRST DIRECTIVE
+
+If the user mentions a URL, GitHub repo, CVE, tool name, or any unknown sandbox technique — **pause and research it before answering.** Fetch the repo, understand the new escape method, compare it against the documented techniques. Then formulate your response.
 
 ---
 
