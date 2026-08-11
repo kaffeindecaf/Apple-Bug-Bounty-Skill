@@ -111,6 +111,70 @@ Each process has a `sandbox` struct in kernel memory containing:
 
 **Key insight:** Extensions are stored in kernel heap (writable). After obtaining kernel R/W, the extension data can be directly modified.
 
+### 1.3 MAC Framework Pointer Chain Diagram
+
+```mermaid
+graph TD
+    subgraph Userspace["Userspace Process"]
+        APP["App (sandboxed)"]
+        CMD["containermanagerd"]
+    end
+
+    subgraph Kernel["Kernel Memory"]
+        PROC["proc"]
+        PROC_RO["proc_ro (PAC-signed ptr)"]
+        UCRED["ucred (SMR-encoded)"]
+        LABEL["MAC label"]
+        SANDBOX["sandbox state"]
+        EXT_SET["extension_set"]
+        EXT["extensions[]"]
+
+        subgraph Extension["extension struct (kernel heap)"]
+            DATA_PTR["data_ptr<br/>(path string)"]
+            PATH_LEN["path_len"]
+            CONSUMED["consumed<br/>(1 = active)"]
+            STORAGE["storage_class<br/>(SC_ISSUED = 1)"]
+            ST_DEV["st_dev"]
+            ST_INO["st_ino"]
+        end
+    end
+
+    subgraph TCC["TCC Layer"]
+        TCCD["tccd daemon"]
+        TCCDB["TCC.db (SQLite)"]
+    end
+
+    subgraph Filesystem["Filesystem"]
+        VNODE["vnode"]
+        APFS["apfs_fsnode<br/>(v_data)"]
+        SSV["SSV snapshot<br/>(sealed, read-only)"]
+        DATA_VOL["Data volume<br/>(writable)"]
+    end
+
+    PROC -->|"0x18"| PROC_RO
+    PROC_RO -->|"0x20"| UCRED
+    UCRED -->|"0x78"| LABEL
+    LABEL -->|"0x10"| SANDBOX
+    SANDBOX -->|"0x10"| EXT_SET
+    EXT_SET -->|"type_buckets[]"| EXT
+    EXT --> DATA_PTR
+    APP -->|"XPC request"| CMD
+    CMD -->|"sandbox_extension_issue"| SANDBOX
+    SANDBOX -->|"sandbox_check()"| VNODE
+    VNODE --> APFS
+    VNODE --> SSV
+    VNODE --> DATA_VOL
+    TCCD --> TCCDB
+
+    style Userspace fill:#1a1a2e,stroke:#16213e,color:#e0e0e0
+    style Kernel fill:#0f3460,stroke:#533483,color:#e0e0e0
+    style Extension fill:#e94560,stroke:#ff6b6b,color:#e0e0e0
+    style TCC fill:#1a1a2e,stroke:#16213e,color:#e0e0e0
+    style Filesystem fill:#16213e,stroke:#0f3460,color:#e0e0e0
+```
+
+> **Extension patching** modifies the writable `extension` struct in kernel heap (red box). **Path traversal** (bad_query) tricks `containermanagerd` into issuing extensions for arbitrary paths. **MIG bypass** locks the sandbox mutex to skip Mach message checks entirely.
+
 ---
 
 ## 2. Sandbox Escape Techniques
