@@ -1,0 +1,9 @@
+out/
+.DS_Store
+.theos/
+packages/
+xcuserdata
+.vscode
+Pwnify/pwnify
+InstallerVictim.ipa
+_build

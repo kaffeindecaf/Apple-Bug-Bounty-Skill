@@ -1,0 +1,45 @@
+# Build artifacts
+*.deb
+*.dylib
+*.app
+*.ipa
+*.o
+*.a
+*.dylib.TdHcU1
+
+# IDE
+*.xcuserdata
+*.xcworkspace/xcuserdata
+*.pbxuser
+!default.pbxuser
+*.mode1v3
+!default.mode1v3
+*.mode2v3
+!default.mode2v3
+*.perspectivev3
+!default.perspectivev3
+.DS_Store
+.idea/
+.vscode/
+
+# macOS
+__MACOSX/
+
+# Git
+*.orig
+
+# Python
+__pycache__/
+*.pyc
+*.egg-info/
+
+# Theos
+.theos/
+obj/
+.layout/
+
+# Temp files
+/tmp/
+*.swp
+*.swo
+*~
