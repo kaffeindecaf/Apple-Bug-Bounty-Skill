@@ -1,10 +1,15 @@
-# Cursor Rules — W0lfSword iOS Exploit Knowledge Base
+# Cursor Rules — Apple-Bug-Bounty-Skill
 
 ## Workspace Configuration
-This workspace contains a curated iOS exploit development knowledge base with 7 specialized skill modules, a master router, and 10 reference projects.
+This workspace contains a curated iOS exploit development knowledge base with 10 specialized skill modules, 4 output options, and 10 reference projects.
 
-## Master Router
-Load `SKILL.md` first — it enforces the research-first protocol and dynamic skill routing.
+## Options Pipeline
+
+Before routing, check the user's prompt for flags: `--adhd`, `--verbose`, `--thinking`, `--new`.
+Load `@options/{flag}.md` for each flag. Flags stack.
+
+**Master Router:** `@SKILL.md`
+→ Always load first for routing logic, options pipeline, and research directives
 
 ## Context Injection Rules
 

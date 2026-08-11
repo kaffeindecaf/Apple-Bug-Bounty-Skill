@@ -1,160 +1,103 @@
 {
-  "name": "w0lfsword-expert-copilot",
-  "version": "3.0.0",
-  "description": "Dynamic AI swarm for iOS exploit development. 7 specialized skill modules with cross-referencing, research-first protocol, and master router. Covers kernel exploitation, sandbox escape, bootchain, code injection, security pentesting, tooling, and research methodology.",
+  "name": "apple-bug-bounty-skill",
+  "version": "4.0.0",
+  "description": "iOS exploit development knowledge base. 10 specialized skill modules with options pipeline (--adhd, --verbose, --thinking, --new), cross-referencing, and research-first protocol.",
   "author": "kaffeindecaf",
   "license": "MIT",
+  "options": {
+    "system": "options/SYSTEM.md",
+    "adhd": {
+      "id": "options-adhd",
+      "file": "options/adhd.md",
+      "trigger": "--adhd",
+      "description": "ADHD-friendly output. Action first, numbered steps, no preamble, no fluff."
+    },
+    "verbose": {
+      "id": "options-verbose",
+      "file": "options/verbose.md",
+      "trigger": "--verbose",
+      "description": "Maximum detail. Full offsets, code snippets, alternatives, caveats."
+    },
+    "thinking": {
+      "id": "options-thinking",
+      "file": "options/thinking.md",
+      "trigger": "--thinking",
+      "description": "Deep chain-of-thought. Multiple hypotheses, higher token budget."
+    },
+    "new": {
+      "id": "options-new",
+      "file": "options/new.md",
+      "trigger": "--new",
+      "description": "Audit mode. Scans target, finds bugs, recommends skills, ranks findings."
+    }
+  },
   "skills": [
     {
-      "id": "w0lfsword-master-router",
-      "name": "Master Router — Research-First Protocol & Dynamic Routing",
+      "id": "master-router",
+      "name": "Master Router",
       "file": "SKILL.md",
-      "description": "Master routing skill. Enforces research-first behavior, routes questions to the correct specialized skill, manages dynamic cross-referencing between all 7 skills.",
-      "trigger_words": ["*"],
-      "related": ["ios-kernel-exploit", "ios-sandbox-escape", "ios-security-pentesting", "ios-misc-tooling", "ios-bootchain-exploit", "ios-code-injection", "ios-research-methodology"],
       "always_load": true
     },
     {
       "id": "ios-kernel-exploit",
-      "name": "iOS Kernel Exploit Development",
-      "file": "skills/ios-kernel-exploit.md",
-      "description": "PAC/SMR, IOSurface OOB, socket spray, Checkm8 boot offsets, KASLR bypass, kernel R/W primitives, ICMPv6 filter corruption",
-      "trigger_words": ["kernel exploit", "PAC", "IOSurface", "SMR", "KASLR", "socket spray", "Checkm8 offsets", "inpcb", "proc_ro", "PPL", "KTRR", "kalloc", "PFZ"],
-      "related": ["ios-sandbox-escape", "ios-bootchain-exploit", "ios-code-injection", "ios-misc-tooling"],
-      "cross_reference_rules": {
-        "sandbox_escape": "If sandbox escape or SSV bypass is discussed",
-        "bootchain": "If bootchain/Checkm8 patches are discussed",
-        "code_injection": "If ROP or code injection is needed",
-        "tooling": "If tooling/build/deploy questions arise",
-        "methodology": "If research methodology is asked"
-      },
-      "research_first": true
+      "name": "iOS Kernel Exploit",
+      "file": "skills/ios-kernel-exploit.md"
     },
     {
       "id": "ios-sandbox-escape",
-      "name": "iOS Sandbox Escape & SSV Bypass",
-      "file": "skills/ios-sandbox-escape.md",
-      "description": "MAC framework, extension set patching, SSV bypass, vnode data swap, container path traversal, MIG filter bypass, TCC manipulation",
-      "trigger_words": ["sandbox escape", "SSV", "TCC", "vnode", "containermanagerd", "MIG bypass", "extension patch", "MAC framework", "APFS", "path traversal"],
-      "related": ["ios-kernel-exploit", "ios-bootchain-exploit", "ios-code-injection", "ios-security-pentesting", "ios-misc-tooling"],
-      "cross_reference_rules": {
-        "kernel_exploit": "If kernel offsets or PAC/SMR are needed",
-        "bootchain": "If boot-time sandbox patches are discussed",
-        "code_injection": "If code injection into sandboxed apps",
-        "security": "If bug bounty reporting or Frida testing",
-        "tooling": "If tooling/build/deploy questions arise",
-        "methodology": "If research methodology is asked"
-      },
-      "research_first": true
+      "name": "iOS Sandbox Escape",
+      "file": "skills/ios-sandbox-escape.md"
     },
     {
       "id": "ios-security-pentesting",
-      "name": "iOS Security & Penetration Testing",
-      "file": "skills/ios-security-pentesting.md",
-      "description": "AMFI analysis, CoreTrust bypass, Frida hooks, bug bounty methodology, code signing, entitlement analysis, SSL pinning, jailbreak detection",
-      "trigger_words": ["bug bounty", "Frida", "SSL pinning", "AMFI", "CoreTrust", "entitlement", "TrollStore", "code signing", "provisioning", "YARA", "jailbreak detection", "Mach-O", "reverse"],
-      "related": ["ios-kernel-exploit", "ios-sandbox-escape", "ios-bootchain-exploit", "ios-code-injection", "ios-misc-tooling"],
-      "cross_reference_rules": {
-        "kernel_exploit": "If kernel exploitation is discussed",
-        "sandbox": "If sandbox escape or TCC bypass",
-        "bootchain": "If bootchain trust cache injection",
-        "code_injection": "If ROP/code injection for AMFI bypass",
-        "tooling": "If tooling (Frida setup, build, deploy)",
-        "methodology": "If research methodology is asked"
-      },
-      "research_first": true
+      "name": "iOS Security Pentesting",
+      "file": "skills/ios-security-pentesting.md"
     },
     {
       "id": "ios-misc-tooling",
-      "name": "iOS Exploit Tooling & Workflow",
-      "file": "skills/ios-misc-tooling.md",
-      "description": "Theos build system, signing with ldid, device deployment via SSH, libimobiledevice, kernelcache extraction/analysis, logging, crash debugging, multi-device workflow",
-      "trigger_words": ["Theos", "deploy", "kernelcache", "libimobiledevice", "ldid", "dpkg-deb", "idevice_id", "SSH", "build tweak", "KPF", "XPF"],
-      "related": ["ios-kernel-exploit", "ios-sandbox-escape", "ios-security-pentesting", "ios-bootchain-exploit", "ios-code-injection"],
-      "cross_reference_rules": {
-        "kernel_exploit": "If kernel offsets or exploit building",
-        "sandbox": "If deploying sandbox escape tools",
-        "bootchain": "If deploying bootchain components",
-        "code_injection": "If signing code injection payloads",
-        "security": "If bug bounty testing setup",
-        "methodology": "If research methodology is asked"
-      },
-      "research_first": true
+      "name": "iOS Tooling & Workflow",
+      "file": "skills/ios-misc-tooling.md"
     },
     {
       "id": "ios-bootchain-exploit",
-      "name": "iOS Bootchain Exploitation — Checkm8 & Boot Patching",
-      "file": "skills/ios-bootchain-exploit.md",
-      "description": "Checkm8 SecureROM exploit, PWN DFU via RP2350, IMG4 signature bypass, kernel patching at boot, DeviceTree manipulation, trust cache injection, hacktivation, SEP workaround",
-      "trigger_words": ["Checkm8", "SecureROM", "iBoot", "iBSS", "iBEC", "IMG4", "PWN DFU", "bootchain", "RP2350", "trust cache", "DeviceTree", "APTicket", "hacktivation", "tethered jailbreak"],
-      "related": ["ios-kernel-exploit", "ios-sandbox-escape", "ios-code-injection", "ios-misc-tooling"],
-      "cross_reference_rules": {
-        "kernel_exploit": "If kernel offsets or PAC/SMR are mentioned",
-        "sandbox": "If sandbox patches or SSV bypass is discussed",
-        "code_injection": "If ROP or code injection is used post-boot",
-        "tooling": "If building/deploying bootchain tools",
-        "methodology": "If researching new bootrom bugs"
-      },
-      "research_first": true
+      "name": "iOS Bootchain Exploit",
+      "file": "skills/ios-bootchain-exploit.md"
     },
     {
       "id": "ios-code-injection",
-      "name": "iOS Code Injection — ROP, dylib, PAC Forging",
-      "file": "skills/ios-code-injection.md",
-      "description": "ROP chain construction, remote dylib injection via dlopen, shellcode thread injection, PAC key stealing and pointer signing, exception-based ROP (excalibur), posix_spawn PAC inheritance, objc_msgSend remote execution",
-      "trigger_words": ["ROP", "JOP", "dylib injection", "shellcode", "PAC forge", "gadget chain", "remote thread", "objc_msgSend remote", "posix_spawn ptrauth", "thread hijack", "code injection"],
-      "related": ["ios-kernel-exploit", "ios-sandbox-escape", "ios-bootchain-exploit", "ios-misc-tooling"],
-      "cross_reference_rules": {
-        "kernel_exploit": "If kernel offsets or PAC/SMR are needed",
-        "sandbox": "If injecting into sandboxed process",
-        "bootchain": "If trust cache or AMFI bypass is needed",
-        "tooling": "If building the injector tool",
-        "methodology": "If researching new injection methods"
-      },
-      "research_first": true
+      "name": "iOS Code Injection",
+      "file": "skills/ios-code-injection.md"
+    },
+    {
+      "id": "ios-webkit-exploit",
+      "name": "iOS WebKit Exploit",
+      "file": "skills/ios-webkit-exploit.md"
+    },
+    {
+      "id": "ios-puaf-exploit",
+      "name": "iOS PUAF Exploit",
+      "file": "skills/ios-puaf-exploit.md"
+    },
+    {
+      "id": "ios-coretrust-bypass",
+      "name": "iOS CoreTrust Bypass",
+      "file": "skills/ios-coretrust-bypass.md"
     },
     {
       "id": "ios-research-methodology",
-      "name": "iOS Exploit Research Methodology",
-      "file": "skills/ios-research-methodology.md",
-      "description": "Systematic code audit protocol, bug class taxonomy (thread-safety, offset validation, dangling pointers, TOCTOU), learning path from beginner to expert, research pipeline (discovery→validation→exploitation→reporting), tool references",
-      "trigger_words": ["research", "methodology", "how to find bugs", "how to audit", "how to reverse", "learning path", "getting started", "beginner", "tutorial", "systematic", "bug class", "CVE research", "patch diff"],
-      "related": ["ios-kernel-exploit", "ios-sandbox-escape", "ios-security-pentesting", "ios-bootchain-exploit", "ios-code-injection", "ios-misc-tooling"],
-      "cross_reference_rules": {
-        "all": "If a specific bug class is found, load the domain skill"
-      },
-      "research_first": true
-    }
-  ],
-  "research_docs": [
-    {
-      "id": "research-deepseek",
-      "file": "docs/researchdeepseek.md",
-      "description": "31 bug bounty findings (8 HIGH, 14 MEDIUM, 9 LOW) with deep exploit architecture explanations and fix proposals"
+      "name": "iOS Research Methodology",
+      "file": "skills/ios-research-methodology.md"
     }
   ],
   "agent_compatibility": {
-    "claude-code": {
-      "config": ".claude/instructions.md",
-      "auto_load": true
-    },
-    "cursor": {
-      "config": ".cursorrules",
-      "auto_load": true
-    },
-    "codex": {
-      "config": ".codex.md",
-      "auto_load": true
-    },
-    "opencode": {
-      "config": "opencode.json",
-      "auto_load": true
-    }
-  },
-  "dynamic_routing": {
-    "master_router": "SKILL.md",
-    "protocol": "research_first",
-    "cross_reference": "automatic",
-    "contribution_loop": true
+    "claude-code": { "config": ".claude/instructions.md", "auto_load": true },
+    "cursor": { "config": ".cursorrules", "auto_load": true },
+    "codex": { "config": ".codex.md", "auto_load": true },
+    "opencode": { "config": "opencode.json", "auto_load": true },
+    "windsurf": { "config": ".windsurfrules", "auto_load": true },
+    "copilot": { "config": ".github/copilot-instructions.md", "auto_load": true },
+    "gemini": { "config": "GEMINI.md", "auto_load": true },
+    "qwen": { "config": "qwen-extension.json", "auto_load": true },
+    "kimi": { "config": "kimi.plugin.json", "auto_load": true }
   }
 }

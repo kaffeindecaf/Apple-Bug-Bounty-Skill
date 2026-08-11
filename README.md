@@ -1,6 +1,6 @@
 # Apple-Bug-Bounty-Skill
 
-iOS exploit development knowledge base. Built from a deep audit of the W0lfSword exploit chain and 11 reference repositories (August 2026). Designed for use with AI coding agents — Claude Code, Cursor, OpenAI Codex, and OpenCode.
+iOS exploit development knowledge base. Built from a deep audit of the W0lfSword exploit chain and 11 reference repositories (August 2026). Designed for use with AI coding agents — Claude Code, Cursor, OpenAI Codex, OpenCode, Windsurf, GitHub Copilot, Gemini, Qwen, and Kimi.
 
 ---
 
@@ -65,6 +65,13 @@ Apple-Bug-Bounty-Skill/
 │   ├── ios-coretrust-bypass.md         # CoreTrust, perma-sign, TrollStore internals
 │   └── ios-research-methodology.md     # Audit protocol, bug classes, learning path
 │
+├── options/                            # 4 output option modules
+│   ├── SYSTEM.md                       # Options pipeline definition
+│   ├── adhd.md                         # --adhd: ADHD-friendly output
+│   ├── verbose.md                      # --verbose: Maximum detail mode
+│   ├── thinking.md                     # --thinking: Deep chain-of-thought
+│   └── new.md                          # --new: Audit and discovery mode
+│
 ├── projects/                           # 11 reference exploit repos
 │   ├── W0lfSword/                      # The exploit chain (audited meta-project)
 │   ├── bad_query/                      # forcequit — container traversal (26-27)
@@ -85,7 +92,12 @@ Apple-Bug-Bounty-Skill/
 ├── .claude/instructions.md             # Claude Code config
 ├── .cursorrules                        # Cursor workspace rules
 ├── .codex.md                           # Codex agent instructions
-└── opencode.json                       # OpenCode skill registry
+├── .windsurfrules                      # Windsurf workspace rules
+├── opencode.json                       # OpenCode skill registry
+├── GEMINI.md                           # Gemini extension
+├── qwen-extension.json                 # Qwen extension
+├── kimi.plugin.json                    # Kimi plugin
+└── .github/copilot-instructions.md     # GitHub Copilot instructions
 ```
 
 ---
@@ -122,6 +134,27 @@ Skills reference each other. When a conversation drifts from one domain to anoth
 ### Research-First Protocol
 
 Every skill has `research_first: true` in its metadata. If a user mentions a URL, GitHub repo, CVE number, or unknown tool, the agent pauses, fetches the source, and analyzes it before answering.
+
+---
+
+## Options
+
+Options are flags you put before your prompt. They stack. They modify how the agent responds.
+
+```bash
+--adhd "How do I escape the sandbox on iOS 26?"
+--new --verbose "Audit this repo for vulnerabilities"
+--thinking "Why does PAC forging fail on A18?"
+```
+
+| Flag | Effect |
+|------|--------|
+| `--adhd` | ADHD-friendly output. Action first, numbered steps, no preamble, no fluff. |
+| `--verbose` | Maximum detail. Full offsets, code snippets, alternatives, caveats. |
+| `--thinking` | Deep chain-of-thought. Multiple hypotheses, higher token budget. |
+| `--new` | Audit mode. Scans target, finds bugs, recommends skills, ranks findings. |
+
+Options are processed by the master router BEFORE skill routing. Say `stop options` to clear.
 
 ---
 

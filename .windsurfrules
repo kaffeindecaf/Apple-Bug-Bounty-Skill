@@ -1,0 +1,35 @@
+# Apple-Bug-Bounty-Skill — Windsurf Rules
+
+## Workspace Configuration
+This workspace contains a curated iOS exploit development knowledge base with 10 specialized skill modules, 4 output options, and 10 reference projects.
+
+## Options Pipeline (Process Before Routing)
+
+Before routing to a skill, check the user's prompt for option flags:
+
+| Flag | Effect |
+|------|--------|
+| `--adhd` | ADHD-friendly output. Action first, no preamble, numbered steps. |
+| `--verbose` | Maximum detail. Full offsets, code, alternatives, caveats. |
+| `--thinking` | Deep chain-of-thought. Multiple hypotheses before answer. |
+| `--new` | Audit mode. Scan target, find bugs, recommend skills, rank findings. |
+
+Load `options/{flag}.md` for the full rules per flag. Flags stack.
+
+## Master Router
+Load `SKILL.md` first — it enforces the research-first protocol and dynamic skill routing with the options pipeline.
+
+## Context Injection Rules
+
+| Trigger Pattern | Load |
+|----------------|------|
+| kernel, PAC, SMR, IOSurface, KASLR, socket spray, Checkm8 offsets | `@skills/ios-kernel-exploit.md` |
+| sandbox, SSV, TCC, vnode, containermanagerd, MIG, extension | `@skills/ios-sandbox-escape.md` |
+| bug bounty, Frida, AMFI, CoreTrust, entitlement, TrollStore | `@skills/ios-security-pentesting.md` |
+| Theos, deploy, kernelcache, libimobiledevice, ldid, SSH | `@skills/ios-misc-tooling.md` |
+| Checkm8, SecureROM, iBoot, IMG4, PWN DFU, trust cache | `@skills/ios-bootchain-exploit.md` |
+| ROP, JOP, dylib injection, shellcode, PAC, remote thread | `@skills/ios-code-injection.md` |
+| WebKit, JSC, JIT, Safari, OffscreenCanvas, GPU IPC | `@skills/ios-webkit-exploit.md` |
+| PUAF, PhysPuppet, Smith, Landa, kfd, page table | `@skills/ios-puaf-exploit.md` |
+| CoreTrust, code signing, perma-sign, fastPathSign, CMS | `@skills/ios-coretrust-bypass.md` |
+| research, methodology, audit, learning path, getting started | `@skills/ios-research-methodology.md` |
