@@ -6,16 +6,18 @@
 > Designed as a **drop-in brain module** for AI coding agents — Claude Code, Cursor, Codex, OpenCode, and any MCP-capable copilot.
 
 ```ascii
-           ▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄
-           ██ ██████╗    ██╗    ██╗ ██████╗ ██╗     ███████╗███████╗██╗███████╗ ██████╗ ██████╗ ██████╗ ██╗
-           ██ ╚════██╗   ██║    ██║██╔═████╗██║     ██╔════╝██╔════╝██║██╔════╝██╔═══██╗██╔══██╗██╔══██╗██║
-           ██  █████╔╝   ██║ █╗ ██║██║██╔██║██║     █████╗  ███████╗██║███████╗██║   ██║██████╔╝██║  ██║██║
-           ██ ██╔═══╝    ██║███╗██║████╔╝██║██║     ██╔══╝  ╚════██║██║╚════██║██║   ██║██╔══██╗██║  ██║╚═╝
-           ██ ███████╗   ╚███╔███╔╝╚██████╔╝███████╗██║     ███████║██║███████║╚██████╔╝██║  ██║██████╔╝██╗
-           ██ ╚══════╝    ╚══╝╚══╝  ╚═════╝ ╚══════╝╚═╝     ╚══════╝╚═╝╚══════╝ ╚═════╝ ╚═╝  ╚═╝╚═════╝ ╚═╝
-           ▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀
-                 ◆ REFERENCE AI — 4-SKILL DROP-IN COPILOT BRAIN ◆
-           ▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀
+        _       ,
+       / \_    / \_                      /\'__
+      /    \  /    \,                  _/  /  \
+     /\/\  /\/ :' __ \_             _^/  ^/    `--.
+    /    \/  \  _/  \-'\           /.' ^_   \_   .'\
+  /\  .-   `. \/     \ /==~=-=~=-=-;.  _/ \ -. `_/   \
+ /  `-.__ ^   / .-'.--\ =-=~_=-=~=^/  _ `--./ .-'  `-  \
+/        `.  / /       `.~-^=-=~=^=.-'               '-._`._
+    AI iOS Security/Exploit/BugBounty Skill.
+
+
+
 ```
 
 ---
@@ -30,6 +32,7 @@ cd Apple-Bug-Bounty-Skill
 Then pick your agent:
 
 ### 🔮 Claude Code
+
 ```bash
 # Claude auto-discovers .claude/instructions.md on session start
 # Or load explicitly:
@@ -37,6 +40,7 @@ claude --system-prompt "$(cat .claude/instructions.md)"
 ```
 
 ### 🖱️ Cursor
+
 ```bash
 # Cursor auto-ingests .cursorrules on workspace open.
 # All skills are registered as context files — reference them inline:
@@ -44,6 +48,7 @@ claude --system-prompt "$(cat .claude/instructions.md)"
 ```
 
 ### 🤖 OpenAI Codex
+
 ```bash
 # Codex auto-discovers .codex.md on session start.
 # Or force-load:
@@ -51,6 +56,7 @@ codex --instructions .codex.md
 ```
 
 ### 🧬 OpenCode
+
 ```bash
 # OpenCode auto-loads opencode.json config.
 # Skills are registered as available skills — just say:
@@ -98,12 +104,12 @@ Apple-Bug-Bounty-Skill/
 
 ## 🧠 Agent Skills — Routing Matrix
 
-| Skill File | Mem Tokens | Agent Trigger Phrases |
-|------------|-----------|----------------------|
-| `skills/ios-kernel-exploit.md` | ~8K | "kernel exploit," "PAC bypass," "IOSurface race," "Checkm8," "kalloc heap spray," "SMR pointer," "IKOT," "PFZ bypass" |
-| `skills/ios-sandbox-escape.md` | ~8K | "sandbox escape," "SSV write," "TCC.db," "vnode redirect," "containermanagerd," "MIG bypass," "extension patch" |
-| `skills/ios-security-pentesting.md` | ~9K | "bug bounty," "Frida hook," "SSL pinning," "AMFI flag," "CoreTrust," "Mach-O reverse," "entitlement," "TrollStore sign" |
-| `skills/ios-misc-tooling.md` | ~11K | "Theos build," "deploy to device," "kernelcache extract," "libimobiledevice," "ssh ios," "dpkg-deb," "idevice_id" |
+| Skill File                          | Mem Tokens | Agent Trigger Phrases                                                                                                   |
+| ----------------------------------- | ---------- | ----------------------------------------------------------------------------------------------------------------------- |
+| `skills/ios-kernel-exploit.md`      | ~8K        | "kernel exploit," "PAC bypass," "IOSurface race," "Checkm8," "kalloc heap spray," "SMR pointer," "IKOT," "PFZ bypass"   |
+| `skills/ios-sandbox-escape.md`      | ~8K        | "sandbox escape," "SSV write," "TCC.db," "vnode redirect," "containermanagerd," "MIG bypass," "extension patch"         |
+| `skills/ios-security-pentesting.md` | ~9K        | "bug bounty," "Frida hook," "SSL pinning," "AMFI flag," "CoreTrust," "Mach-O reverse," "entitlement," "TrollStore sign" |
+| `skills/ios-misc-tooling.md`        | ~11K       | "Theos build," "deploy to device," "kernelcache extract," "libimobiledevice," "ssh ios," "dpkg-deb," "idevice_id"       |
 
 ### YAML Frontmatter (Machine-Readable)
 
@@ -136,19 +142,19 @@ related_skills:
 
 ## 📊 Exploit Technique Coverage
 
-| Project | Method | iOS Range | Kernel R/W | Sandbox Escape | SSV Bypass |
-|---------|--------|-----------|------------|----------------|------------|
-| **W0lfSword** (meta) | DarkSword + ext-patch + vnode | 15–26 | ✓ ICMPv6 OOB | ✓ Extension borrow | ✓ Vnode swap |
-| `bad_query` | Container path traversal | 26–27 | — | ✓ containermanagerd | — |
-| `darksword-kexploit` | DarkSword CLI | 15–26 | ✓ ICMPv6 OOB | — | — |
-| `DarkSword-RCE` | WebKit → GPU → XNU | 18.4 | ✓ ICMPv6 OOB | ✓ GPU msg OOB | — |
-| `excalibur` | DarkSword + Remote ROP | multi | ✓ ICMPv6 OOB | ✓ Ext + MIG | ✓ Vnode redirect |
-| `FilzaJailedDS` | Original tweak package | 15–17 | ✓ ICMPv6 OOB | ✓ Extension patch | ✓ Vnode swap |
-| `kfd` | PUAF methods | 16.x | ✓ PUAF | — | — |
-| `opainject` | ROP dylib injection | 14–17 | — | — | — |
-| `TrollStore` | CoreTrust bypass | 15–17 | — | — | — |
-| `usbliter8-fun` | Checkm8 bootchain | 15.6+27 | ✓ SecureROM | ✓ Kernel patch | ✓ Kernel patch |
-| `usbliter8-fun2` | Checkm8 jailbreak | 27.0b2 | ✓ SecureROM | ✓ NOP sandbox hooks | ✓ DeviceTree rw |
+| Project              | Method                        | iOS Range | Kernel R/W   | Sandbox Escape      | SSV Bypass       |
+| -------------------- | ----------------------------- | --------- | ------------ | ------------------- | ---------------- |
+| **W0lfSword** (meta) | DarkSword + ext-patch + vnode | 15–26     | ✓ ICMPv6 OOB | ✓ Extension borrow  | ✓ Vnode swap     |
+| `bad_query`          | Container path traversal      | 26–27     | —            | ✓ containermanagerd | —                |
+| `darksword-kexploit` | DarkSword CLI                 | 15–26     | ✓ ICMPv6 OOB | —                   | —                |
+| `DarkSword-RCE`      | WebKit → GPU → XNU            | 18.4      | ✓ ICMPv6 OOB | ✓ GPU msg OOB       | —                |
+| `excalibur`          | DarkSword + Remote ROP        | multi     | ✓ ICMPv6 OOB | ✓ Ext + MIG         | ✓ Vnode redirect |
+| `FilzaJailedDS`      | Original tweak package        | 15–17     | ✓ ICMPv6 OOB | ✓ Extension patch   | ✓ Vnode swap     |
+| `kfd`                | PUAF methods                  | 16.x      | ✓ PUAF       | —                   | —                |
+| `opainject`          | ROP dylib injection           | 14–17     | —            | —                   | —                |
+| `TrollStore`         | CoreTrust bypass              | 15–17     | —            | —                   | —                |
+| `usbliter8-fun`      | Checkm8 bootchain             | 15.6+27   | ✓ SecureROM  | ✓ Kernel patch      | ✓ Kernel patch   |
+| `usbliter8-fun2`     | Checkm8 jailbreak             | 27.0b2    | ✓ SecureROM  | ✓ NOP sandbox hooks | ✓ DeviceTree rw  |
 
 ---
 
@@ -156,13 +162,14 @@ related_skills:
 
 From `docs/researchdeepseek.md` — a comprehensive deep audit:
 
-| Severity | Count | Sampling |
-|----------|-------|----------|
-| ⏺ **HIGH** | 8 | Thread-safety race in `kread`, borrow dangling pointer UaF, mutex deadlock, offset validation gap, root vnode chain, `free_thread` spin, `khexdump` PAC strip, `sandbox_escape` retry loop stall |
-| ⏺ **MEDIUM** | 14 | `S()`/`K()` macro overflow, no `free_thread` yield, `inp_listnext` walk depth, `kwrite_zone_element` size, extension class string leak, `bsd_flags` write through, `smr_base` statically hardcoded, `kcall` gadget verification |
-| ⏺ **LOW** | 9 | `khexdump` format leak, `offset.h` duplicates, `zip` main-thread block, socket spray exhaustion threshold, `check_sandbox` test coverage, `TweakLog` rotation racing, comment stale offsets |
+| Severity     | Count | Sampling                                                                                                                                                                                                                        |
+| ------------ | ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| ⏺ **HIGH**   | 8     | Thread-safety race in `kread`, borrow dangling pointer UaF, mutex deadlock, offset validation gap, root vnode chain, `free_thread` spin, `khexdump` PAC strip, `sandbox_escape` retry loop stall                                |
+| ⏺ **MEDIUM** | 14    | `S()`/`K()` macro overflow, no `free_thread` yield, `inp_listnext` walk depth, `kwrite_zone_element` size, extension class string leak, `bsd_flags` write through, `smr_base` statically hardcoded, `kcall` gadget verification |
+| ⏺ **LOW**    | 9     | `khexdump` format leak, `offset.h` duplicates, `zip` main-thread block, socket spray exhaustion threshold, `check_sandbox` test coverage, `TweakLog` rotation racing, comment stale offsets                                     |
 
 ### Fixes Shipped (PRs Merged)
+
 - **W0lfSword** — 7 fixes (mutex, validation, rootvnode, khexdump, offsets, free_thread yield, offsets.h)
 - **bad_query** — 3 fixes (NULL guard, max_inode bound, stopAccessing leak)
 - **darksword-kexploit** — 2 fixes (mutex, free_thread yield)
@@ -172,6 +179,7 @@ From `docs/researchdeepseek.md` — a comprehensive deep audit:
 ## 🛠 Setup & Agent Wiring
 
 ### Prerequisites
+
 - **Git** ≥ 2.40
 - **Python 3.10+** (for XPF, TSS proxy, activation scripts)
 - **clang + ldid** (if building exploits locally)
@@ -194,6 +202,7 @@ Key directives:
 — Auto-routes bug bounty / reversing → ios-security-pentesting skill
 — Auto-routes build/deploy questions → ios-misc-tooling skill
 ```
+
 </details>
 
 <details>
@@ -209,6 +218,7 @@ Key behavior:
 — @skills/ios-sandbox-escape → loads sandbox escape context
 — @docs/researchdeepseek.md → loads full research document
 ```
+
 </details>
 
 <details>
@@ -223,6 +233,7 @@ Key directives:
 — Maps natural language intents to skill file paths
 — Sets context injection rules for codex chat window
 ```
+
 </details>
 
 <details>
@@ -239,6 +250,7 @@ Key behavior:
 — Can be invoked via "Load ios-kernel-exploit skill"
 — Cross-skill routing via related_skills metadata
 ```
+
 </details>
 
 ---
@@ -277,4 +289,4 @@ python3 scripts/validate_skills.py   # (coming soon)
 
 > `λ(swarm).neural → [kernel|sandbox|pentest|tooling].context_inject(trigger) → exploit_knowledge.activation()`
 >
-> *Curated by **kaffeindecaf** · github.com/kaffeindecaf · August 2026 · MIT License*
+> _Curated by **kaffeindecaf** · github.com/kaffeindecaf · August 2026 · MIT License_
