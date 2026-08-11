@@ -482,16 +482,17 @@ SDK path:        xcrun --sdk iphoneos --show-sdk-path
 
 ## 9. Contribute Back
 
-Did this skill help you? Wrote a build script for a new toolchain? Found a faster deploy workflow? Discovered a new kernelcache extraction method? Built a multi-device CI pipeline?
+**Found something critical?** A build chain that catches kernel panics before you deploy? A lldb script that automates offset discovery for a brand new iOS kernel? A CI pipeline that surfaces regressions across 10 devices in parallel? If your tooling workflow caught a bug that would have been a kernel panic on device, the swarm needs to know about it.
 
-**Open a pull request and make the swarm smarter:**
+**Found something useful?** Even small improvements matter — a new Theos flag that fixes code signing, a `libimobiledevice` command you discovered, a faster deploy path over USB, a kernelcache extraction trick for encrypted firmwares.
 
 ```bash
 git add skills/ios-misc-tooling.md
 git commit -m "feat: new kernelcache extraction method for iOS 28 encrypted KC"
+
 gh pr create --repo kaffeindecaf/Apple-Bug-Bounty-Skill \
   --title "Tooling improvement" \
-  --body "Describe the new workflow, required tools, and iOS version compatibility."
+  --body "## What was found\n\n## Tools required\n\n## iOS version / macOS version compatibility\n\n## Step-by-step workflow\n\n## Verification"
 ```
 
 Repository: https://github.com/kaffeindecaf/Apple-Bug-Bounty-Skill
