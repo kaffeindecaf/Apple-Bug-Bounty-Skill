@@ -1,0 +1,536 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# ─────────────────────────────────────────────────
+# Apple-Bug-Bounty-Skill — Interactive Setup
+# Supports: Linux, macOS
+# Configures: Claude Code, Cursor, Codex, OpenCode,
+#              Windsurf, Copilot, Gemini, Qwen, Kimi
+# ─────────────────────────────────────────────────
+
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+CYAN='\033[0;36m'
+BOLD='\033[1m'
+NC='\033[0m'
+
+SKILL_DIR="$HOME/.apple-bug-bounty-skill"
+REPO_URL="https://github.com/kaffeindecaf/Apple-Bug-Bounty-Skill.git"
+
+# ─────────────────────────────────────────────────
+# WOLF BANNER
+# ─────────────────────────────────────────────────
+
+show_banner() {
+    echo -e "${CYAN}"
+    cat << 'WOLF'
+                    / V\
+                  / `  /
+                 <<   |
+                 /    |
+               /      |
+             /        |
+           /    \  \ /
+          (      ) | |
+  ________|   _/_  | |
+<__________\______)\__)
+WOLF
+    echo -e "${BOLD}          Apple-Bug-Bounty-Skill Setup${NC}"
+    echo -e "${CYAN}    10 skills · 8 options · 9 agents · 0 fluff${NC}"
+    echo ""
+}
+
+# ─────────────────────────────────────────────────
+# UTILITY FUNCTIONS
+# ─────────────────────────────────────────────────
+
+log_info()  { echo -e "  ${BLUE}[INFO]${NC}  $1"; }
+log_ok()    { echo -e "  ${GREEN}[OK]${NC}    $1"; }
+log_warn()  { echo -e "  ${YELLOW}[WARN]${NC}  $1"; }
+log_err()   { echo -e "  ${RED}[ERROR]${NC} $1"; }
+log_step()  { echo -e "\n${BOLD}${CYAN}─── $1 ───${NC}"; }
+
+spin() {
+    local pid=$1 msg="$2" i=0 chars="/-\|"
+    while kill -0 "$pid" 2>/dev/null; do
+        printf "\r  ${BLUE}[%s]${NC} %s" "${chars:i++%4:1}" "$msg"
+        sleep 0.1
+    done
+    printf "\r"
+    wait "$pid"
+}
+
+# ─────────────────────────────────────────────────
+# SYSTEM DETECTION
+# ─────────────────────────────────────────────────
+
+detect_os() {
+    case "$(uname -s)" in
+        Linux*)  OS="linux";  PKG_MGR="apt-get";;
+        Darwin*) OS="macos";  PKG_MGR="brew";;
+        *)       log_err "Unsupported OS: $(uname -s)"; exit 1;;
+    esac
+    log_info "Detected OS: ${OS} ($(uname -m))"
+    log_info "Package manager: ${PKG_MGR}"
+}
+
+check_deps() {
+    log_step "Checking System Dependencies"
+    local missing=()
+
+    for cmd in git curl; do
+        if command -v "$cmd" &>/dev/null; then
+            log_ok "$cmd found: $(command -v "$cmd")"
+        else
+            log_warn "$cmd not found"
+            missing+=("$cmd")
+        fi
+    done
+
+    if command -v python3 &>/dev/null; then
+        log_ok "python3 found: $(python3 --version 2>&1)"
+    else
+        log_warn "python3 not found (needed for XPF/TSS/activation scripts)"
+        missing+=("python3")
+    fi
+
+    if command -v gh &>/dev/null; then
+        log_ok "gh (GitHub CLI) found: $(gh --version 2>&1 | head -1)"
+    else
+        log_warn "gh not found (needed for PR contributions)"
+        missing+=("gh")
+    fi
+
+    if [ ${#missing[@]} -gt 0 ]; then
+        echo ""
+        log_warn "Missing packages: ${missing[*]}"
+        read -rp "  Install them now? [Y/n] " answer
+        if [[ "$answer" =~ ^[Nn] ]]; then
+            log_info "Skipping. You may need to install them manually later."
+        else
+            if [ "$PKG_MGR" = "brew" ]; then
+                for pkg in "${missing[@]}"; do
+                    log_info "Installing $pkg via brew..."
+                    brew install "$pkg" 2>/dev/null || log_warn "Failed to install $pkg via brew"
+                done
+            else
+                log_info "Installing via apt-get..."
+                sudo apt-get update -qq && sudo apt-get install -y -qq "${missing[@]}" 2>/dev/null || log_warn "Failed to install some packages"
+            fi
+        fi
+    fi
+}
+
+# ─────────────────────────────────────────────────
+# AGENT DETECTION
+# ─────────────────────────────────────────────────
+
+AGENTS=()
+declare -A AGENT_NAMES AGENT_CONFIGS AGENT_PATHS AGENT_DETECT
+
+detect_agents() {
+    log_step "Detecting Installed AI Agents"
+    AGENTS=()
+
+    # Claude Code
+    if command -v claude &>/dev/null; then
+        AGENTS+=("claude")
+        AGENT_NAMES["claude"]="Claude Code"
+        AGENT_CONFIGS["claude"]=".claude/instructions.md"
+        AGENT_PATHS["claude"]="$HOME/.claude"
+        AGENT_DETECT["claude"]="cli at: $(command -v claude)"
+        log_ok "Claude Code detected — ${AGENT_DETECT["claude"]}"
+    else
+        log_info "Claude Code not detected (install: npm install -g @anthropic-ai/claude-code)"
+    fi
+
+    # Cursor
+    if command -v cursor &>/dev/null || [ -d "/Applications/Cursor.app" ] || [ -d "$HOME/Applications/Cursor.app" ]; then
+        AGENTS+=("cursor")
+        AGENT_NAMES["cursor"]="Cursor"
+        AGENT_CONFIGS["cursor"]=".cursorrules"
+        AGENT_PATHS["cursor"]="$SKILL_DIR"
+        AGENT_DETECT["cursor"]="app detected"
+        log_ok "Cursor detected"
+    else
+        log_info "Cursor not detected (download: https://cursor.com)"
+    fi
+
+    # OpenAI Codex
+    if command -v codex &>/dev/null; then
+        AGENTS+=("codex")
+        AGENT_NAMES["codex"]="OpenAI Codex"
+        AGENT_CONFIGS["codex"]=".codex.md"
+        AGENT_PATHS["codex"]="$HOME/.codex"
+        AGENT_DETECT["codex"]="cli at: $(command -v codex)"
+        log_ok "OpenAI Codex detected — ${AGENT_DETECT["codex"]}"
+    else
+        log_info "OpenAI Codex not detected (install: npm install -g @openai/codex)"
+    fi
+
+    # OpenCode
+    if command -v opencode &>/dev/null; then
+        AGENTS+=("opencode")
+        AGENT_NAMES["opencode"]="OpenCode"
+        AGENT_CONFIGS["opencode"]="opencode.json"
+        AGENT_PATHS["opencode"]="$SKILL_DIR"
+        AGENT_DETECT["opencode"]="cli at: $(command -v opencode)"
+        log_ok "OpenCode detected — ${AGENT_DETECT["opencode"]}"
+    else
+        log_info "OpenCode not detected (see: https://opencode.ai)"
+    fi
+
+    # Windsurf
+    if command -v windsurf &>/dev/null || [ -d "/Applications/Windsurf.app" ] || [ -d "$HOME/Applications/Windsurf.app" ]; then
+        AGENTS+=("windsurf")
+        AGENT_NAMES["windsurf"]="Windsurf"
+        AGENT_CONFIGS["windsurf"]=".windsurfrules"
+        AGENT_PATHS["windsurf"]="$SKILL_DIR"
+        AGENT_DETECT["windsurf"]="app detected"
+        log_ok "Windsurf detected"
+    else
+        log_info "Windsurf not detected (download: https://codeium.com/windsurf)"
+    fi
+
+    # GitHub Copilot
+    if command -v gh &>/dev/null && gh extension list 2>/dev/null | grep -q "copilot"; then
+        AGENTS+=("copilot")
+        AGENT_NAMES["copilot"]="GitHub Copilot"
+        AGENT_CONFIGS["copilot"]=".github/copilot-instructions.md"
+        AGENT_PATHS["copilot"]="$SKILL_DIR"
+        AGENT_DETECT["copilot"]="gh extension detected"
+        log_ok "GitHub Copilot detected"
+    else
+        log_info "GitHub Copilot CLI not detected (install: gh extension install github/gh-copilot)"
+    fi
+
+    # Gemini
+    if command -v gemini &>/dev/null || [ -f "$HOME/.gemini/config.json" ] 2>/dev/null; then
+        AGENTS+=("gemini")
+        AGENT_NAMES["gemini"]="Google Gemini"
+        AGENT_CONFIGS["gemini"]="GEMINI.md"
+        AGENT_PATHS["gemini"]="$HOME/.gemini"
+        AGENT_DETECT["gemini"]="cli detected"
+        log_ok "Gemini detected"
+    else
+        log_info "Gemini CLI not detected (see: https://github.com/google-gemini/gemini-cli)"
+    fi
+
+    # Qwen
+    AGENTS+=("qwen")
+    AGENT_NAMES["qwen"]="Alibaba Qwen"
+    AGENT_CONFIGS["qwen"]="qwen-extension.json"
+    AGENT_PATHS["qwen"]="$SKILL_DIR"
+    AGENT_DETECT["qwen"]="always available (config-only)"
+
+    # Kimi
+    AGENTS+=("kimi")
+    AGENT_NAMES["kimi"]="Moonshot Kimi"
+    AGENT_CONFIGS["kimi"]="kimi.plugin.json"
+    AGENT_PATHS["kimi"]="$SKILL_DIR"
+    AGENT_DETECT["kimi"]="always available (config-only)"
+
+    echo ""
+    log_info "Found ${#AGENTS[@]} compatible agent(s) to configure"
+}
+
+# ─────────────────────────────────────────────────
+# INTERACTIVE AGENT SELECTION
+# ─────────────────────────────────────────────────
+
+select_agents() {
+    log_step "Select Agents to Configure"
+
+    echo ""
+    echo -e "  ${BOLD}Available agents:${NC}"
+    echo ""
+
+    local idx=1
+    declare -gA AGENT_IDX
+    for agent in "${AGENTS[@]}"; do
+        local name="${AGENT_NAMES[$agent]}"
+        local detect="${AGENT_DETECT[$agent]}"
+        printf "  ${BOLD}%2d)${NC} %-25s ${CYAN}%s${NC}\n" "$idx" "$name" "$detect"
+        AGENT_IDX[$idx]="$agent"
+        ((idx++))
+    done
+
+    echo ""
+    echo -e "  ${BOLD} a)${NC}  All of the above"
+    echo -e "  ${BOLD} q)${NC}  Quit without configuring"
+    echo ""
+
+    read -rp "  Your choice (space-separated numbers, 'a' for all, or 'q'): " selection
+
+    if [[ "$selection" == "q" ]]; then
+        echo ""
+        log_info "No agents configured. Run this script again anytime."
+        exit 0
+    fi
+
+    SELECTED_AGENTS=()
+    if [[ "$selection" == "a" ]]; then
+        SELECTED_AGENTS=("${AGENTS[@]}")
+    else
+        for num in $selection; do
+            if [[ -n "${AGENT_IDX[$num]:-}" ]]; then
+                SELECTED_AGENTS+=("${AGENT_IDX[$num]}")
+            fi
+        done
+    fi
+
+    echo ""
+    log_info "Will configure:"
+    for agent in "${SELECTED_AGENTS[@]}"; do
+        echo -e "    - ${GREEN}${AGENT_NAMES[$agent]}${NC}"
+    done
+    echo ""
+
+    read -rp "  Proceed? [Y/n] " confirm
+    if [[ "$confirm" =~ ^[Nn] ]]; then
+        log_info "Aborted. Run this script again anytime."
+        exit 0
+    fi
+}
+
+# ─────────────────────────────────────────────────
+# SKILL INSTALLATION
+# ─────────────────────────────────────────────────
+
+clone_or_update_repo() {
+    log_step "Setting Up Skill Repository"
+
+    if [ -d "$SKILL_DIR/.git" ]; then
+        log_info "Repository exists at $SKILL_DIR"
+        log_info "Pulling latest changes..."
+        (
+            cd "$SKILL_DIR"
+            git pull --ff-only origin main 2>&1 | while IFS= read -r line; do
+                log_info "  git: $line"
+            done
+        )
+        log_ok "Repository updated"
+    else
+        log_info "Cloning into $SKILL_DIR..."
+        git clone --depth 1 "$REPO_URL" "$SKILL_DIR" 2>&1 | while IFS= read -r line; do
+            log_info "  git: $line"
+        done
+        log_ok "Repository cloned"
+    fi
+
+    log_info "Verifying repository integrity..."
+    local required=(
+        "SKILL.md"
+        "opencode.json"
+        "options/SYSTEM.md"
+        "skills/ios-kernel-exploit.md"
+        "skills/ios-sandbox-escape.md"
+        "skills/ios-security-pentesting.md"
+        "skills/ios-misc-tooling.md"
+        "skills/ios-bootchain-exploit.md"
+        "skills/ios-code-injection.md"
+        "skills/ios-webkit-exploit.md"
+        "skills/ios-puaf-exploit.md"
+        "skills/ios-coretrust-bypass.md"
+        "skills/ios-research-methodology.md"
+    )
+    for f in "${required[@]}"; do
+        if [ -f "$SKILL_DIR/$f" ]; then
+            log_ok "Found: $f"
+        else
+            log_err "Missing: $f — repository may be corrupted"
+        fi
+    done
+}
+
+configure_agent() {
+    local agent="$1"
+    local name="${AGENT_NAMES[$agent]}"
+    local config="${AGENT_CONFIGS[$agent]}"
+    local path="${AGENT_PATHS[$agent]}"
+
+    log_step "Configuring $name"
+
+    local src="$SKILL_DIR/$config"
+    if [ ! -f "$src" ]; then
+        log_err "Config file not found: $src"
+        return 1
+    fi
+
+    case "$agent" in
+        claude)
+            mkdir -p "$HOME/.claude"
+            cp "$src" "$HOME/.claude/instructions.md"
+            log_ok "Copied $config → $HOME/.claude/instructions.md"
+            log_info "Claude Code will auto-load this on session start"
+            ;;
+
+        cursor)
+            log_info "Cursor auto-ingests .cursorrules from the workspace directory."
+            log_info "Open $SKILL_DIR as a workspace in Cursor to activate."
+            log_info "Skills available via: @skills/ios-kernel-exploit.md (etc.)"
+            ;;
+
+        codex)
+            mkdir -p "$HOME/.codex"
+            cp "$src" "$HOME/.codex/instructions.md"
+            log_ok "Copied $config → $HOME/.codex/instructions.md"
+            log_info "Run: codex --instructions $HOME/.codex/instructions.md"
+            ;;
+
+        opencode)
+            log_info "OpenCode auto-loads opencode.json from the project root."
+            log_info "cd $SKILL_DIR && opencode to start."
+            ;;
+
+        windsurf)
+            log_info "Windsurf auto-ingests .windsurfrules from the workspace directory."
+            log_info "Open $SKILL_DIR as a workspace in Windsurf to activate."
+            ;;
+
+        copilot)
+            mkdir -p "$SKILL_DIR/.github"
+            cp "$src" "$SKILL_DIR/.github/copilot-instructions.md"
+            log_ok "Copied $config"
+            log_info "GitHub Copilot will use these instructions on this repo."
+            ;;
+
+        gemini)
+            mkdir -p "$HOME/.gemini"
+            cp "$src" "$HOME/.gemini/"
+            log_ok "Copied $config → $HOME/.gemini/GEMINI.md"
+            log_info "Gemini will use this as an extension."
+            ;;
+
+        qwen|kimi)
+            log_info "$name plugin config is at: $src"
+            log_info "Import this file in $name's plugin settings."
+            ;;
+    esac
+
+    log_ok "$name configured successfully"
+    echo ""
+}
+
+verify_setup() {
+    log_step "Verifying Setup"
+
+    echo ""
+    echo -e "  ${BOLD}Configured agents:${NC}"
+    for agent in "${SELECTED_AGENTS[@]}"; do
+        local name="${AGENT_NAMES[$agent]}"
+        local config="${AGENT_CONFIGS[$agent]}"
+        local path="${AGENT_PATHS[$agent]}"
+
+        case "$agent" in
+            claude)
+                if [ -f "$HOME/.claude/instructions.md" ]; then
+                    printf "  ${GREEN}✓${NC} %-25s %s\n" "$name" "$HOME/.claude/instructions.md"
+                else
+                    printf "  ${RED}✗${NC} %-25s %s\n" "$name" "config missing"
+                fi
+                ;;
+            cursor|windsurf|opencode|qwen|kimi|gemini|copilot)
+                if [ -f "$SKILL_DIR/$config" ]; then
+                    printf "  ${GREEN}✓${NC} %-25s %s\n" "$name" "$SKILL_DIR/$config"
+                else
+                    printf "  ${RED}✗${NC} %-25s %s\n" "$name" "config missing"
+                fi
+                ;;
+            codex)
+                if [ -f "$HOME/.codex/instructions.md" ]; then
+                    printf "  ${GREEN}✓${NC} %-25s %s\n" "$name" "$HOME/.codex/instructions.md"
+                else
+                    printf "  ${RED}✗${NC} %-25s %s\n" "$name" "config missing"
+                fi
+                ;;
+        esac
+    done
+
+    echo ""
+    echo -e "  ${BOLD}Skill files:${NC}"
+    local skill_count=$(find "$SKILL_DIR/skills" -name "*.md" -type f 2>/dev/null | wc -l | tr -d ' ')
+    local option_count=$(find "$SKILL_DIR/options" -name "*.md" -type f 2>/dev/null | wc -l | tr -d ' ')
+    printf "  ${GREEN}✓${NC} %-25s %d skills loaded\n" "Skill modules:" "$skill_count"
+    printf "  ${GREEN}✓${NC} %-25s %d options available\n" "Output options:" "$option_count"
+
+    echo ""
+    echo -e "  ${BOLD}Quick test commands:${NC}"
+    for agent in "${SELECTED_AGENTS[@]}"; do
+        case "$agent" in
+            claude)   echo -e "    ${CYAN}claude${NC} \"Load ios-kernel-exploit skill\"" ;;
+            cursor)   echo -e "    ${CYAN}cursor${NC} $SKILL_DIR   (open workspace)" ;;
+            codex)    echo -e "    ${CYAN}codex${NC} --instructions $HOME/.codex/instructions.md" ;;
+            opencode) echo -e "    ${CYAN}opencode${NC}                                       (cd $SKILL_DIR first)" ;;
+            windsurf) echo -e "    ${CYAN}windsurf${NC} $SKILL_DIR    (open workspace)" ;;
+            *)        echo -e "    ${CYAN}$agent${NC}: config ready at $SKILL_DIR/$config" ;;
+        esac
+    done
+}
+
+# ─────────────────────────────────────────────────
+# SUMMARY
+# ─────────────────────────────────────────────────
+
+show_summary() {
+    echo ""
+    echo -e "${BOLD}${GREEN}╔══════════════════════════════════════════════╗${NC}"
+    echo -e "${BOLD}${GREEN}║          Setup Complete                      ║${NC}"
+    echo -e "${BOLD}${GREEN}╚══════════════════════════════════════════════╝${NC}"
+    echo ""
+    echo -e "  Skills location: ${CYAN}$SKILL_DIR${NC}"
+    echo -e "  Agents configured: ${GREEN}${#SELECTED_AGENTS[@]}${NC}"
+    echo ""
+    echo -e "  ${BOLD}Options to try:${NC}"
+    echo -e "    ${YELLOW}--adhd${NC}       ADHD-friendly, action-first output"
+    echo -e "    ${YELLOW}--verbose${NC}    Maximum detail, all offsets, full code"
+    echo -e "    ${YELLOW}--thinking${NC}   Deep chain-of-thought, multiple hypotheses"
+    echo -e "    ${YELLOW}--new${NC}        Audit mode, rank findings critical-to-low"
+    echo -e "    ${YELLOW}--idea${NC}       Project/feature idea generator"
+    echo -e "    ${YELLOW}--bug${NC}        Bug checker → writes foundbugs.md"
+    echo -e "    ${YELLOW}--fix${NC}        Bug fixer (chained from --bug)"
+    echo -e "    ${YELLOW}--cash${NC}       Money-focused ideas + career paths"
+    echo ""
+    echo -e "  ${BOLD}To contribute back:${NC}"
+    echo -e "    Fork ${CYAN}$REPO_URL${NC}"
+    echo -e "    Run ${CYAN}gh pr create --repo kaffeindecaf/Apple-Bug-Bounty-Skill${NC}"
+    echo ""
+}
+
+# ─────────────────────────────────────────────────
+# MAIN
+# ─────────────────────────────────────────────────
+
+main() {
+    show_banner
+    detect_os
+    check_deps
+    detect_agents
+
+    if [ ${#AGENTS[@]} -eq 0 ]; then
+        log_err "No AI agents detected on this system."
+        log_info "You can still clone the repository: git clone $REPO_URL"
+        log_info "Then manually load SKILL.md into your preferred agent."
+        exit 1
+    fi
+
+    select_agents
+
+    if [ ${#SELECTED_AGENTS[@]} -eq 0 ]; then
+        log_info "Nothing to configure. Goodbye."
+        exit 0
+    fi
+
+    clone_or_update_repo
+
+    for agent in "${SELECTED_AGENTS[@]}"; do
+        configure_agent "$agent"
+    done
+
+    verify_setup
+    show_summary
+}
+
+main "$@"

@@ -9,9 +9,12 @@ iOS exploit development knowledge base. Built from a deep audit of the W0lfSword
 ```bash
 git clone https://github.com/kaffeindecaf/Apple-Bug-Bounty-Skill.git
 cd Apple-Bug-Bounty-Skill
+./setup
 ```
 
-Then pick your agent:
+The interactive setup script detects installed AI agents and configures them automatically.
+
+Or configure manually — pick your agent:
 
 ### Claude Code
 
@@ -52,6 +55,8 @@ opencode "Load ios-kernel-exploit skill and analyze this kernel panic"
 Apple-Bug-Bounty-Skill/
 │
 ├── SKILL.md                            # Master router — research-first, dynamic routing
+│
+├── setup                               # Interactive setup script (Linux/macOS)
 │
 ├── skills/                             # 10 specialized skill modules
 │   ├── ios-kernel-exploit.md           # KASLR, PAC, SMR, IOSurface, socket spray
