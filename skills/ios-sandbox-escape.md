@@ -4,6 +4,11 @@ version: 3.0.0
 agent_compatibility: [claude-code, cursor, codex, opencode, copilot, windsurf]
 token_budget: 8192
 covers: [MAC framework, extension patch, SSV bypass, vnode swap, TCC]
+learns_from:
+  - projects/bad_query
+  - projects/FilzaJailedDS
+  - projects/excalibur
+  - projects/DarkSword-RCE
 platforms: [ios 15.0-27.0, arm64/arm64e]
 triggers:
   - sandbox escape

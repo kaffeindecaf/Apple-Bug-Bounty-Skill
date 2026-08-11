@@ -31,6 +31,15 @@ Load `SKILL.md` first — it enforces the research-first protocol and dynamic sk
 **Code Injection** (ROP, JOP, dylib injection, shellcode, PAC forging, remote threads):
 → `@skills/ios-code-injection.md`
 
+**WebKit Exploitation** (JSC, JIT, type confusion, OffscreenCanvas, GPU IPC, Safari RCE):
+→ `@skills/ios-webkit-exploit.md`
+
+**PUAF Exploitation** (PhysPuppet, Smith, Landa, kfd, physical use-after-free, page tables):
+→ `@skills/ios-puaf-exploit.md`
+
+**CoreTrust Bypass** (perma-sign, fastPathSign, CMS signature, cdhash, TrollStore, entitlement injection):
+→ `@skills/ios-coretrust-bypass.md`
+
 **Research Methodology** (bug hunting, audit protocol, learning path, getting started):
 → `@skills/ios-research-methodology.md`
 

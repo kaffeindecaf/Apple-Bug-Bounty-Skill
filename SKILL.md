@@ -1,7 +1,7 @@
 ---
-name: w0lfsword-master-router
+name: apple-bug-bounty-skill-master-router
 version: 3.0.0
-description: Master routing skill for the W0lfSword iOS exploit development swarm. Routes questions to the correct specialized skill, enforces research-first behavior, and manages dynamic cross-referencing between skills.
+description: Master routing skill for the Apple-Bug-Bounty-Skill iOS exploit development knowledge base. Routes questions to the correct specialized skill, enforces research-first behavior, and manages dynamic cross-referencing between all 10 skill modules.
 agent_compatibility: [claude-code, cursor, codex, opencode, copilot, windsurf]
 ---
 
@@ -39,6 +39,9 @@ When a user asks a question, route to the correct skill(s):
 | Theos, deploy, kernelcache, libimobiledevice, ldid, dpkg-deb, SSH, idevice_id, build tweak, KPF, XPF, crash log, device management, toolchain | `skills/ios-misc-tooling.md` | **YES** |
 | Checkm8, SecureROM, iBoot, iBSS, iBEC, IMG4, bootrom, PWN DFU, bootchain, RP2350, trust cache injection, DeviceTree, firmware signing, APTicket, hacktivation | `skills/ios-bootchain-exploit.md` | **YES** |
 | ROP, JOP, dylib injection, shellcode, PAC forging, gadget chain, stack pivot, remote thread, pthread injection, objc_msgSend remote, code injection, dyld | `skills/ios-code-injection.md` | **YES** |
+| WebKit, JSC, JavaScriptCore, Safari RCE, JIT bug, type confusion, addrof, fakeobj, OffscreenCanvas, createImageBitmap, GPU IPC, WebContent sandbox | `skills/ios-webkit-exploit.md` | **YES** |
+| PUAF, PhysPuppet, Smith, Landa, physical use-after-free, CVE-2023-23536, CVE-2023-32434, CVE-2023-41974, kfd, dangling PTE, page table exploitation, perfmon bootstrap | `skills/ios-puaf-exploit.md` | **YES** |
+| CoreTrust, code signing bypass, perma-sign, fastPathSign, CMS signature, cdhash, provisioning profile, AMFI userspace bypass, installd bypass, TrollStore internals | `skills/ios-coretrust-bypass.md` | **YES** |
 | research, methodology, how to find bugs, how to audit, how to reverse, how to discover offsets, learning path, getting started, beginner, tutorial | `skills/ios-research-methodology.md` | **YES** |
 
 ### Dynamic Cross-Reference Rules
@@ -49,10 +52,20 @@ When one skill is loaded and the conversation touches another domain, you MUST l
 ios-kernel-exploit ←→ ios-sandbox-escape     (sandbox escape needs kernel R/W)
 ios-kernel-exploit ←→ ios-bootchain-exploit   (Checkm8 gives kernel debug access)
 ios-kernel-exploit ←→ ios-code-injection      (ROP chains need kernel offsets)
+ios-kernel-exploit ←→ ios-puaf-exploit         (alternative kernel R/W methods)
 ios-sandbox-escape ←→ ios-bootchain-exploit   (boot-time sandbox patches)
 ios-sandbox-escape ←→ ios-security-pentesting (TCC bypass = security testing)
 ios-code-injection ←→ ios-kernel-exploit      (ROP needs KASLR slide + gadgets)
 ios-code-injection ←→ ios-sandbox-escape      (inject into sandboxed apps)
+ios-webkit-exploit ←→ ios-kernel-exploit      (WebKit chain leads to kernel)
+ios-webkit-exploit ←→ ios-code-injection      (JOP chains need PAC forging)
+ios-webkit-exploit ←→ ios-puaf-exploit         (alternative to DarkSword kernel stage)
+ios-puaf-exploit ←→ ios-kernel-exploit        (different kernel R/W primitive)
+ios-puaf-exploit ←→ ios-code-injection        (post-PUAF code injection)
+ios-puaf-exploit ←→ ios-sandbox-escape        (what you do after kernel R/W)
+ios-coretrust-bypass ←→ ios-security-pentesting (CoreTrust = security domain)
+ios-coretrust-bypass ←→ ios-bootchain-exploit  (trust cache injection alternative)
+ios-coretrust-bypass ←→ ios-code-injection     (ROP for unsigned dylibs)
 ios-misc-tooling ←→ ALL                       (build/deploy touches everything)
 ios-research-methodology ←→ ALL               (research methodology is universal)
 ```
@@ -93,7 +106,10 @@ If the user mentions ANY of the following, research it first:
 | 4 | `skills/ios-misc-tooling.md` | ~11K | Active |
 | 5 | `skills/ios-bootchain-exploit.md` | ~10K | Active |
 | 6 | `skills/ios-code-injection.md` | ~9K | Active |
-| 7 | `skills/ios-research-methodology.md` | ~8K | Active |
+| 7 | `skills/ios-webkit-exploit.md` | ~9K | Active |
+| 8 | `skills/ios-puaf-exploit.md` | ~8K | Active |
+| 9 | `skills/ios-coretrust-bypass.md` | ~8K | Active |
+| 10 | `skills/ios-research-methodology.md` | ~8K | Active |
 
 ---
 

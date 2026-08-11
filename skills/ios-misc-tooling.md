@@ -4,6 +4,10 @@ version: 3.0.0
 agent_compatibility: [claude-code, cursor, codex, opencode, copilot, windsurf]
 token_budget: 11264
 covers: [Theos, ldid, deploy, kernelcache, libimobiledevice, device management]
+learns_from:
+  - projects/FilzaJailedDS
+  - projects/excalibur
+  - projects/usbliter8-fun2
 platforms: [macOS, Linux cross-compile, iOS 15.0-27.0]
 triggers:
   - Theos build

@@ -22,6 +22,9 @@ When the user asks a question, auto-route to the correct skill file:
 | "Theos," "deploy," "kernelcache," "libimobiledevice," "SSH ios," "dpkg-deb," "idevice_id," "build tweak," "ldid sign," "KPF," "XPF" | `skills/ios-misc-tooling.md` |
 | "Checkm8," "SecureROM," "iBoot," "iBSS," "iBEC," "IMG4," "PWN DFU," "bootchain," "RP2350," "trust cache," "DeviceTree," "APTicket," "hacktivation" | `skills/ios-bootchain-exploit.md` |
 | "ROP," "JOP," "dylib injection," "shellcode," "PAC forge," "gadget chain," "remote thread," "objc_msgSend remote," "posix_spawn ptrauth" | `skills/ios-code-injection.md` |
+| "WebKit," "JSC," "JavaScriptCore," "Safari RCE," "JIT bug," "type confusion," "addrof," "fakeobj," "OffscreenCanvas," "createImageBitmap," "GPU IPC," "WebContent" | `skills/ios-webkit-exploit.md` |
+| "PUAF," "PhysPuppet," "Smith," "Landa," "CVE-2023-23536," "CVE-2023-32434," "CVE-2023-41974," "kfd," "dangling PTE," "perfmon," "physical use-after-free" | `skills/ios-puaf-exploit.md` |
+| "CoreTrust," "code signing bypass," "perma-sign," "fastPathSign," "CMS signature," "cdhash," "provisioning profile," "installd bypass," "entitlement injection" | `skills/ios-coretrust-bypass.md` |
 | "research," "methodology," "how to find bugs," "how to audit," "how to reverse," "learning path," "getting started," "beginner" | `skills/ios-research-methodology.md` |
 
 ## Dynamic Cross-Referencing
@@ -55,4 +58,7 @@ Before answering ANY question:
 | 4 | Tooling & Workflow | `skills/ios-misc-tooling.md` | ~11K |
 | 5 | Bootchain Exploit | `skills/ios-bootchain-exploit.md` | ~10K |
 | 6 | Code Injection | `skills/ios-code-injection.md` | ~9K |
-| 7 | Research Methodology | `skills/ios-research-methodology.md` | ~8K |
+| 7 | WebKit Exploit | `skills/ios-webkit-exploit.md` | ~9K |
+| 8 | PUAF Exploit | `skills/ios-puaf-exploit.md` | ~8K |
+| 9 | CoreTrust Bypass | `skills/ios-coretrust-bypass.md` | ~8K |
+| 10 | Research Methodology | `skills/ios-research-methodology.md` | ~8K |
