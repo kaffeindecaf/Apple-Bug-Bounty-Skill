@@ -4,7 +4,7 @@
 [![Skills](https://img.shields.io/badge/skills-10-green)]()
 [![Options](https://img.shields.io/badge/options-8-orange)]()
 [![Agents](https://img.shields.io/badge/agents-9-purple)]()
-[![iOS](https://img.shields.io/badge/iOS-15.0--27.0-lightgrey)]()
+[![Platforms](https://img.shields.io/badge/platform-linux%20%7C%20macos%20%7C%20windows-lightgrey)]()
 
 iOS exploit development knowledge base. Built from a deep audit of the W0lfSword exploit chain and 10 reference repositories (August 2026).
 
@@ -30,6 +30,7 @@ cd Apple-Bug-Bounty-Skill
 
 **Windows (PowerShell):**
 ```powershell
+Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned -Force
 .\setup.ps1
 ```
 
@@ -147,7 +148,7 @@ ios-kernel-exploit ←→ ios-bootchain-exploit   (Checkm8 gives kernel access)
 ios-webkit-exploit →  ios-kernel-exploit      (WebKit chain leads to kernel)
 ios-puaf-exploit   ←→ ios-kernel-exploit      (alternative K-R/W primitive)
 ios-code-injection ←→ ios-bootchain-exploit   (ROP needs trust cache/AMFI)
-ios-bug-checker     ↔ ios-fixer              (--bug chains to --fix)
+ios-coretrust      ←→ ios-security-pentesting (CoreTrust is a security domain)
 ios-misc-tooling   ←→ ALL                     (tooling touches everything)
 ios-research       ←→ ALL                     (methodology is universal)
 ```
