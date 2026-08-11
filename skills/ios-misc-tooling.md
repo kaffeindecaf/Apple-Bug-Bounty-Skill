@@ -480,4 +480,20 @@ SDK path:        xcrun --sdk iphoneos --show-sdk-path
 
 ---
 
-*Part of the W0lfSword exploit skill suite. See also: kernel-exploit.md, sandbox-escape.md, security-pentesting.md*
+## 9. Contribute Back
+
+Did this skill help you? Wrote a build script for a new toolchain? Found a faster deploy workflow? Discovered a new kernelcache extraction method? Built a multi-device CI pipeline?
+
+**Open a pull request and make the swarm smarter:**
+
+```bash
+git add skills/ios-misc-tooling.md
+git commit -m "feat: new kernelcache extraction method for iOS 28 encrypted KC"
+gh pr create --repo kaffeindecaf/Apple-Bug-Bounty-Skill \
+  --title "Tooling improvement" \
+  --body "Describe the new workflow, required tools, and iOS version compatibility."
+```
+
+Repository: https://github.com/kaffeindecaf/Apple-Bug-Bounty-Skill
+
+Every contribution sharpens every agent that loads this skill.
