@@ -12,8 +12,12 @@ Before routing to a skill, check the user's prompt for option flags:
 | `--verbose` | Maximum detail. Full offsets, code, alternatives, caveats. |
 | `--thinking` | Deep chain-of-thought. Multiple hypotheses before answer. Higher token budget. |
 | `--new` | Audit mode. Scan target → find bugs → recommend skills → rank findings. |
+| `--idea` | Project/feature ideas. Empty dirs → project ideas with pros/cons. Code → feature ideas ranked by usefulness. |
+| `--bug` | Bug checker. Scans using 10 bug classes, writes foundbugs.md, chains to --fix. |
+| `--fix` | Bug fixer. Reads foundbugs.md, fixes critical first, asks before next tier. |
+| `--cash` | Money-focused ideas. Same as --idea but ranked by earning potential ($$$/$$/$). |
 
-Flags stack. `--adhd --thinking "How do I escape the sandbox?"` = deep analysis + short output. Load `options/{flag}.md` for the full rules per flag.
+Flags stack. `--adhd --idea` = short idea list. `--bug --verbose` = detailed bug scan. `--bug` chains to `--fix`. Load `options/{flag}.md` for the full rules per flag.
 
 ## Master Router
 

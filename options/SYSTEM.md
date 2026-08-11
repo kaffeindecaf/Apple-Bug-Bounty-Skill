@@ -1,7 +1,7 @@
 ---
 name: options-system
-version: 1.0.0
-description: Option flag pipeline for Apple-Bug-Bounty-Skill. Options are applied BEFORE skill routing. Stackable — combine multiple flags. Options persist for the session unless turned off.
+version: 2.0.0
+description: Option flag pipeline for Apple-Bug-Bounty-Skill. 8 options — stackable, cross-compatible, dynamic.
 ---
 
 # Options System
@@ -16,12 +16,16 @@ Multiple options stack. Order does not matter. Options apply to whichever skill 
 
 ## Available Options
 
-| Flag | File | Effect |
-|------|------|--------|
-| `--adhd` | `options/adhd.md` | ADHD-friendly output. Action first. No preamble. No fluff. |
-| `--verbose` | `options/verbose.md` | Full detail. All offsets. All caveats. All alternatives. |
-| `--thinking` | `options/thinking.md` | Deep chain-of-thought. Higher token budget. Explores multiple paths before answering. |
-| `--new` | `options/new.md` | Audit mode. Analyzes the target, finds issues, recommends skills, ranks findings critical-to-low. |
+| Flag | File | Effect | Chains To |
+|------|------|--------|-----------|
+| `--adhd` | `options/adhd.md` | ADHD-friendly output. Action first. No preamble. No fluff. | — |
+| `--verbose` | `options/verbose.md` | Full detail. All offsets. All caveats. All alternatives. | — |
+| `--thinking` | `options/thinking.md` | Deep chain-of-thought. Higher token budget. Explores multiple paths. | — |
+| `--new` | `options/new.md` | Audit mode. Analyzes target, finds issues, recommends skills, ranks findings. | — |
+| `--idea` | `options/idea.md` | Project/feature idea generator. Empty folders → project ideas. Existing code → feature ideas. | — |
+| `--bug` | `options/bug.md` | Bug checker. Scans using 10 bug classes, writes to foundbugs.md. | → `--fix` |
+| `--fix` | `options/fix.md` | Bug fixer. Fixes bugs from foundbugs.md one at a time, critical first. | ← `--bug` |
+| `--cash` | `options/cash.md` | Money-focused idea generator. Same as --idea but ranked by earning potential. | — |
 
 ## How They Work
 
@@ -31,17 +35,24 @@ Multiple options stack. Order does not matter. Options apply to whichever skill 
 4. Agent routes the remaining prompt to the correct skill
 5. Skill answers with the option constraints applied
 
+## Chained Options
+
+`--bug` and `--fix` are chained:
+
+```
+--bug "Scan this repo"        → Writes foundbugs.md → "Run --fix next"
+--fix                         → Reads foundbugs.md → Fixes CRITICAL → "Continue with HIGH?"
+--fix                         → Fixes HIGH → "Continue with MEDIUM?"
+```
+
 ## Stacking Examples
 
 ```
---adhd --thinking "Find the root cause of this kernel panic at 0xFFFFFFDC00000000"
-→ ADHD output style + deep chain-of-thought analysis. Short answer, but deeply reasoned.
-
---new --verbose "Review this repo for vulnerabilities"
-→ Audit mode with full detail. Lists all findings ranked, with exhaustive context.
-
---adhd "How do I escape the sandbox on iOS 26?"
-→ Short, numbered steps. No preamble. No closing pleasantries.
+--adhd --idea                 → Project ideas in ADHD format (short, action-first)
+--new --verbose "audit this"  → Full audit with maximum detail
+--bug --verbose "find bugs"   → Bug scan with comprehensive descriptions in foundbugs.md
+--cash --thinking             → Money ideas with deep chain-of-thought for each
+--adhd --bug                  → Bug scan with short, numbered bug descriptions
 ```
 
 ## Turn Off

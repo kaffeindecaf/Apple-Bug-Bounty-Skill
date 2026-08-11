@@ -65,12 +65,16 @@ Apple-Bug-Bounty-Skill/
 │   ├── ios-coretrust-bypass.md         # CoreTrust, perma-sign, TrollStore internals
 │   └── ios-research-methodology.md     # Audit protocol, bug classes, learning path
 │
-├── options/                            # 4 output option modules
+├── options/                            # 8 output option modules
 │   ├── SYSTEM.md                       # Options pipeline definition
 │   ├── adhd.md                         # --adhd: ADHD-friendly output
 │   ├── verbose.md                      # --verbose: Maximum detail mode
 │   ├── thinking.md                     # --thinking: Deep chain-of-thought
-│   └── new.md                          # --new: Audit and discovery mode
+│   ├── new.md                          # --new: Audit and discovery mode
+│   ├── idea.md                         # --idea: Project/feature idea generator
+│   ├── bug.md                          # --bug: Bug checker → foundbugs.md
+│   ├── fix.md                          # --fix: Bug fixer (chained from --bug)
+│   └── cash.md                         # --cash: Money-focused idea generator
 │
 ├── projects/                           # 11 reference exploit repos
 │   ├── W0lfSword/                      # The exploit chain (audited meta-project)
@@ -153,8 +157,12 @@ Options are flags you put before your prompt. They stack. They modify how the ag
 | `--verbose` | Maximum detail. Full offsets, code snippets, alternatives, caveats. |
 | `--thinking` | Deep chain-of-thought. Multiple hypotheses, higher token budget. |
 | `--new` | Audit mode. Scans target, finds bugs, recommends skills, ranks findings. |
+| `--idea` | Project/feature idea generator. Empty dirs -> project ideas with pros/cons. Existing code -> feature ideas rated by usefulness. |
+| `--bug` | Bug checker. Scans using 10 bug classes, writes to `foundbugs.md`, chains to `--fix`. |
+| `--fix` | Bug fixer. Fixes bugs from `foundbugs.md` one at a time. Critical first, asks before next tier. |
+| `--cash` | Money-focused idea generator. Like `--idea` but ranked by earning potential ($$$/$$/$). |
 
-Options are processed by the master router BEFORE skill routing. Say `stop options` to clear.
+Options are processed by the master router BEFORE skill routing. `--bug` chains to `--fix` — run `--bug` first, then `--fix` to resolve. Say `stop options` to clear.
 
 ---
 

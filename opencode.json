@@ -29,6 +29,32 @@
       "file": "options/new.md",
       "trigger": "--new",
       "description": "Audit mode. Scans target, finds bugs, recommends skills, ranks findings."
+    },
+    "idea": {
+      "id": "options-idea",
+      "file": "options/idea.md",
+      "trigger": "--idea",
+      "description": "Project/feature idea generator. Empty dirs get project ideas, existing code gets feature ideas."
+    },
+    "bug": {
+      "id": "options-bug",
+      "file": "options/bug.md",
+      "trigger": "--bug",
+      "description": "Bug checker. Scans using 10 bug classes, writes to foundbugs.md, chains to --fix.",
+      "chains_to": "--fix"
+    },
+    "fix": {
+      "id": "options-fix",
+      "file": "options/fix.md",
+      "trigger": "--fix",
+      "description": "Bug fixer. Fixes bugs from foundbugs.md one at a time, critical first.",
+      "chained_from": "--bug"
+    },
+    "cash": {
+      "id": "options-cash",
+      "file": "options/cash.md",
+      "trigger": "--cash",
+      "description": "Money-focused idea generator. Ranks ideas by earning potential ($$$/$$/$)."
     }
   },
   "skills": [

@@ -46,3 +46,6 @@ obj/
 
 # Self tracking (private checklist — NOT versioned)
 .checklist.md
+
+# Bug tracking (user-generated — NOT versioned)
+foundbugs.md
