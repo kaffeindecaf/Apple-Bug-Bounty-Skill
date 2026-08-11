@@ -43,3 +43,6 @@ obj/
 *.swp
 *.swo
 *~
+
+# Self tracking (private checklist — NOT versioned)
+.checklist.md

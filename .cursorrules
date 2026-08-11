@@ -1,0 +1,38 @@
+# Cursor Rules — W0lfSword iOS Exploit Knowledge Base
+
+## Workspace Configuration
+This workspace contains a curated iOS exploit development knowledge base.
+Skills are in `skills/` and research docs in `docs/`.
+
+## Context Injection Rules
+
+### Auto-load these files when relevant keywords appear:
+
+**Kernel Exploitation** (PAC, SMR, IOSurface, KASLR, socket spray, offsets, Checkm8, PPL):
+→ Always include `@skills/ios-kernel-exploit.md`
+
+**Sandbox Escape** (SSV, TCC, vnode, containermanagerd, MAC framework, MIG bypass, path traversal):
+→ Always include `@skills/ios-sandbox-escape.md`
+
+**Security Testing** (Frida, AMFI, CoreTrust, code signing, bug bounty, YARA, SSL pinning):
+→ Always include `@skills/ios-security-pentesting.md`
+
+**Tooling & Build** (Theos, ldid, libimobiledevice, kernelcache, deploy, dpkg-deb):
+→ Always include `@skills/ios-misc-tooling.md`
+
+**Research & Findings** (bounty reports, exploit architecture, deep dive):
+→ Always include `@docs/researchdeepseek.md`
+
+## Offsets Rule
+Never hallucinate iOS kernel struct offsets. Always reference the skill files or suggest offset discovery methods (KDK, XPF, runtime validation).
+
+## Citation Format
+When answering, cite the skill file and section: `skills/ios-kernel-exploit.md §3.1`
+
+## Project Structure
+- `skills/` — 4 AI agent skill files with YAML frontmatter
+- `projects/` — 10 reference exploit repositories
+- `docs/` — Research documents and findings
+- `.claude/` — Claude Code configuration
+- `.codex.md` — OpenAI Codex configuration
+- `opencode.json` — OpenCode configuration

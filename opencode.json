@@ -1,0 +1,66 @@
+{
+  "name": "w0lfsword-expert-copilot",
+  "version": "2.1.0",
+  "description": "AI-swarm iOS exploit development knowledge base. Multi-agent skill modules for kernel exploitation, sandbox escape, security pentesting, and tooling.",
+  "author": "kaffeindecaf",
+  "license": "MIT",
+  "skills": [
+    {
+      "id": "ios-kernel-exploit",
+      "name": "iOS Kernel Exploit Development",
+      "file": "skills/ios-kernel-exploit.md",
+      "description": "PAC/SMR, IOSurface OOB, socket spray, Checkm8 bootchain, offset discovery, KASLR bypass, kernel R/W primitives",
+      "trigger_words": ["kernel exploit", "PAC", "IOSurface", "SMR", "KASLR", "socket spray", "Checkm8", "offsets", "inpcb", "proc_ro", "PPL", "KTRR", "kalloc", "PFZ"],
+      "related": ["ios-sandbox-escape", "ios-misc-tooling"]
+    },
+    {
+      "id": "ios-sandbox-escape",
+      "name": "iOS Sandbox Escape & SSV Bypass",
+      "file": "skills/ios-sandbox-escape.md",
+      "description": "MAC framework, extension set patching, SSV bypass, vnode data swap, container path traversal, MIG filter bypass, TCC manipulation",
+      "trigger_words": ["sandbox escape", "SSV", "TCC", "vnode", "containermanagerd", "MIG bypass", "extension patch", "MAC framework", "APFS", "path traversal", "st_dev", "st_ino"],
+      "related": ["ios-kernel-exploit", "ios-security-pentesting"]
+    },
+    {
+      "id": "ios-security-pentesting",
+      "name": "iOS Security & Penetration Testing",
+      "file": "skills/ios-security-pentesting.md",
+      "description": "AMFI analysis, CoreTrust bypass, Frida hooks, bug bounty methodology, code signing, entitlement analysis, SSL pinning, jailbreak detection",
+      "trigger_words": ["bug bounty", "Frida", "SSL pinning", "AMFI", "CoreTrust", "entitlement", "TrollStore", "code signing", "provisioning", "YARA", "jailbreak detection", "Mach-O", "reverse"],
+      "related": ["ios-kernel-exploit", "ios-sandbox-escape"]
+    },
+    {
+      "id": "ios-misc-tooling",
+      "name": "iOS Exploit Tooling & Workflow",
+      "file": "skills/ios-misc-tooling.md",
+      "description": "Theos build system, signing with ldid, device deployment via SSH, libimobiledevice, kernelcache extraction/analysis, logging, crash debugging",
+      "trigger_words": ["Theos", "deploy", "kernelcache", "libimobiledevice", "ldid", "dpkg-deb", "idevice_id", "SSH", "build tweak", "KPF", "XPF", "offsets"],
+      "related": ["ios-kernel-exploit", "ios-sandbox-escape", "ios-security-pentesting"]
+    }
+  ],
+  "research_docs": [
+    {
+      "id": "research-deepseek",
+      "file": "docs/researchdeepseek.md",
+      "description": "31 bug bounty findings (8 HIGH, 14 MEDIUM, 9 LOW) with deep exploit architecture explanations and fix proposals"
+    }
+  ],
+  "agent_compatibility": {
+    "claude-code": {
+      "config": ".claude/instructions.md",
+      "auto_load": true
+    },
+    "cursor": {
+      "config": ".cursorrules",
+      "auto_load": true
+    },
+    "codex": {
+      "config": ".codex.md",
+      "auto_load": true
+    },
+    "opencode": {
+      "config": "opencode.json",
+      "auto_load": true
+    }
+  }
+}

@@ -1,3 +1,28 @@
+---
+name: ios-sandbox-escape
+version: 2.1.0
+agent_compatibility: [claude-code, cursor, codex, opencode, copilot, windsurf]
+token_budget: 8192
+covers: [MAC framework, extension patch, SSV bypass, vnode swap, TCC]
+platforms: [ios 15.0-27.0, arm64/arm64e]
+triggers:
+  - sandbox escape
+  - SSV bypass
+  - TCC database
+  - vnode redirect
+  - containermanagerd
+  - MIG filter bypass
+  - extension patching
+  - MAC framework
+  - APFS fsnode
+  - path traversal
+  - st_dev st_ino
+related_skills:
+  - ios-kernel-exploit
+  - ios-security-pentesting
+  - ios-misc-tooling
+---
+
 # iOS Sandbox Escape & Filesystem Bypass
 
 > **Skill type:** Specialized — sandbox escape & SSV bypass  

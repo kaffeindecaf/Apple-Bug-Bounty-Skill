@@ -1,3 +1,29 @@
+---
+name: ios-misc-tooling
+version: 2.1.0
+agent_compatibility: [claude-code, cursor, codex, opencode, copilot, windsurf]
+token_budget: 11264
+covers: [Theos, ldid, deploy, kernelcache, libimobiledevice, device management]
+platforms: [macOS, Linux cross-compile, iOS 15.0-27.0]
+triggers:
+  - Theos build
+  - deploy to device
+  - kernelcache extract
+  - libimobiledevice
+  - ldid sign
+  - dpkg-deb
+  - idevice_id
+  - SSH iOS
+  - build tweak
+  - KPF offset
+  - XPF pattern
+  - crash debugging
+related_skills:
+  - ios-kernel-exploit
+  - ios-sandbox-escape
+  - ios-security-pentesting
+---
+
 # iOS Exploit Development — Tooling & Workflow
 
 > **Skill type:** Support — build, deploy, debug, device management  
