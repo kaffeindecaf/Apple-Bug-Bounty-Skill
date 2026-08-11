@@ -14,16 +14,52 @@ iOS exploit development knowledge base. Built from a deep audit of the W0lfSword
 
 ## Quick Start
 
+### 1. Clone the repository
+
 ```bash
 git clone https://github.com/kaffeindecaf/Apple-Bug-Bounty-Skill.git
 cd Apple-Bug-Bounty-Skill
+```
+
+### 2. Run the interactive setup
+
+```bash
 ./setup
 ```
 
-The interactive setup script detects installed agents and configures them automatically. Works on Linux and macOS.
+The setup script works on Linux and macOS. It detects which AI agents you have installed and configures them automatically. Choose one agent or all of them.
+
+### 3. Start asking questions
+
+Open your agent and start using the skills. No special import needed — agents auto-load their config files.
+
+```bash
+# Claude Code (auto-discovers .claude/instructions.md)
+claude "How do I escape the iOS sandbox on version 26?"
+
+# OpenCode (auto-loads opencode.json)
+opencode "Load ios-kernel-exploit skill and analyze this kernel panic"
+
+# Cursor / Windsurf (open this directory as a workspace)
+cursor .    # then: @skills/ios-kernel-exploit.md
+```
+
+### 4. Use options to control output
+
+Options go before your prompt. They stack. They work with any agent.
+
+```bash
+--adhd "How do I escape the sandbox?"      # Short, numbered steps, no fluff
+--verbose "Explain the DarkSword exploit"   # Every offset, every caveat
+--new --verbose "Audit this repo"           # Full audit with ranked findings
+--bug "Check for thread-safety issues"      # Scan → write foundbugs.md → then --fix
+--cash "What should I build next?"          # Money-focused ideas + career paths
+```
+
+### Manual setup (if you skip the setup script)
 
 <details>
-<summary><b>Or configure manually</b></summary>
+<summary>Click to expand manual instructions</summary>
 
 #### Claude Code
 ```bash
@@ -31,11 +67,7 @@ claude                          # Auto-discovers .claude/instructions.md
 ```
 
 #### Cursor / Windsurf
-```bash
-# Open this directory as a workspace. Reference skills inline:
-#   @skills/ios-kernel-exploit.md
-#   @skills/ios-sandbox-escape.md
-```
+Open this directory as a workspace. Reference skills inline: `@skills/ios-kernel-exploit.md`
 
 #### OpenAI Codex
 ```bash
@@ -96,6 +128,8 @@ Options are processed before skill routing. `--bug` chains to `--fix`. Say `stop
 | `ios-puaf-exploit` | 8K | PhysPuppet, Smith, Landa, kfd library, page table exploitation |
 | `ios-coretrust-bypass` | 8K | CoreTrust, fastPathSign, CMS signature, perma-sign, TrollStore |
 | `ios-research-methodology` | 8K | Audit protocol, 10 bug classes, 5-stage learning path, tool references |
+
+All kernel struct offsets are centralized in `offsets.yaml` — the canonical source of truth. Skills reference it instead of hardcoding values.
 
 ### How skills work together
 

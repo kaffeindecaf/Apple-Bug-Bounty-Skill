@@ -1,0 +1,760 @@
+# Apple-Bug-Bounty-Skill — Offsets Database
+# Canonical source for kernel struct offsets, memory layout constants,
+# and hardware-specific values across iOS versions and SoCs.
+#
+# Format:
+#   struct:
+#     description: "..."
+#     verified_by: KDK | pattern_match | documentation
+#     fields:
+#       field_name:
+#         description: "..."
+#         type: uint64 | uint32 | uint8 | pointer
+#         versions:
+#           "version_range":
+#             value: hex_or_decimal
+#             soc_variants:
+#               soc_name: hex_or_decimal  # only when SoC-specific
+#
+# Constants are at the bottom under `constants:`.
+#
+# Usage: skills reference this file instead of hardcoding offsets.
+#   "See offsets.yaml → proc.p_proc_ro for the correct value per iOS version."
+#
+# Last updated: 2026-08-11
+
+meta:
+  canonical: true
+  replaces_hardcoded_offsets_in:
+    - skills/ios-kernel-exploit.md
+    - skills/ios-sandbox-escape.md
+    - skills/ios-code-injection.md
+    - skills/ios-bootchain-exploit.md
+    - projects/FilzaJailedDS/kexploit/offsets.m
+    - projects/excalibur/darksword-kexploit-fun/kexploit/offsets.m
+  source_files:
+    kdk_dump: projects/FilzaJailedDS/kexploit/offsets.m
+    pattern_scan: projects/FilzaJailedDS/kexploit/offsets.m
+    static_info: projects/kfd/kfd/libkfd/info/static_info.h
+
+# ─────────────────────────────────────────────────
+# KERNEL STRUCT OFFSETS
+# ─────────────────────────────────────────────────
+
+structs:
+
+  proc:
+    description: "Process structure — the kernel's representation of a running process"
+    verified_by: KDK
+    fields:
+      p_list_le_next:
+        description: "Next process in global process list"
+        type: pointer
+        versions:
+          "17.0-26.x": 0x0
+      p_list_le_prev:
+        description: "Previous process in global process list"
+        type: pointer
+        versions:
+          "17.0-26.x": 0x8
+      p_proc_ro:
+        description: "Pointer to read-only process data (PAC-signed on arm64e)"
+        type: pointer  # PAC-signed on arm64e
+        versions:
+          "17.0-26.x": 0x18
+      p_pid:
+        description: "Process ID (uint32)"
+        type: uint32
+        versions:
+          "17.0-26.x": 0x60
+      p_fd:
+        description: "Pointer to filedesc (open file table)"
+        type: pointer
+        verified_by: pattern_match
+        versions:
+          "17.0-26.x": 0xd0
+      p_flag:
+        description: "Process flags (P_AMFI_DISABLED, P_DISABLE_ASLR, etc.)"
+        type: uint32
+        verified_by: pattern_match
+        versions:
+          "17.0-26.x": 0x454
+      p_textvp:
+        description: "Executable vnode pointer (used for KASLR bypass)"
+        type: pointer
+        verified_by: pattern_match
+        versions:
+          "17.0-26.x": 0x548
+      p_name:
+        description: "Process name string (16 bytes + null)"
+        type: string
+        verified_by: pattern_match
+        versions:
+          "17.0-17.3": 0x579
+          "17.4-26.x": 0x57d
+
+  proc_ro:
+    description: "Read-Only Process Data — immutable after process creation"
+    verified_by: KDK
+    fields:
+      pr_task:
+        description: "SMR-encoded task pointer"
+        type: pointer  # SMR-encoded
+        versions:
+          "17.0-26.x": 0x8
+      p_ucred:
+        description: "SMR-encoded ucred pointer"
+        type: pointer  # SMR-encoded
+        versions:
+          "17.0-17.7": 0x20
+          "18.0-18.3": 0x20
+          "18.4-26.x": 0x28
+
+  ucred:
+    description: "Credentials structure — UID, GID, groups, MAC label"
+    verified_by: KDK
+    fields:
+      cr_label:
+        description: "MAC label pointer (→label→sandbox chain)"
+        type: pointer
+        versions:
+          "17.0-26.x": 0x78
+
+  posix_cred:
+    description: "POSIX credentials embedded in ucred at +0x18"
+    verified_by: documentation
+    parent_struct: ucred
+    parent_offset: 0x18
+    fields:
+      cr_uid: { type: uint32, versions: { "17.0-26.x": 0x00 } }
+      cr_ruid: { type: uint32, versions: { "17.0-26.x": 0x04 } }
+      cr_svuid: { type: uint32, versions: { "17.0-26.x": 0x08 } }
+      cr_ngroups: { type: uint32, versions: { "17.0-26.x": 0x0C } }
+      cr_groups_0: { type: uint32, versions: { "17.0-26.x": 0x10 } }
+      cr_rgid: { type: uint32, versions: { "17.0-26.x": 0x50 } }
+      cr_svgid: { type: uint32, versions: { "17.0-26.x": 0x54 } }
+      cr_gmuid: { type: uint32, versions: { "17.0-26.x": 0x58 } }
+      cr_flags: { type: uint32, versions: { "17.0-26.x": 0x5C } }
+
+  label:
+    description: "MAC label — holds per-policy pointers (AMFI at [0], sandbox at [1])"
+    verified_by: KDK
+    fields:
+      l_perpolicy_amfi:
+        description: "AMFI per-policy pointer (l_perpolicy[0])"
+        type: pointer
+        verified_by: pattern_match
+        versions:
+          "17.0-26.x": 0x8
+      l_perpolicy_sandbox:
+        description: "Sandbox per-policy pointer (l_perpolicy[1])"
+        type: pointer
+        verified_by: pattern_match
+        versions:
+          "17.0-26.x": 0x10
+
+  sandbox:
+    description: "Per-process sandbox state"
+    verified_by: KDK
+    fields:
+      extension_set:
+        description: "Pointer to sandbox extension set"
+        type: pointer
+        versions:
+          "17.0-26.x": 0x10
+
+  extension:
+    description: "Sandbox extension struct (kernel heap, writable)"
+    verified_by: documentation
+    fields:
+      data_ptr: { description: "Path string pointer in kernel heap", type: pointer, versions: { "17.0-26.x": 0x00 } }
+      path_len: { description: "strlen(path)", type: uint64, versions: { "17.0-26.x": 0x08 } }
+      consumed: { description: "1 = active/consumed", type: uint8, versions: { "17.0-26.x": 0x10 } }
+      storage_class: { description: "SC_ISSUED = 1", type: uint8, versions: { "17.0-26.x": 0x11 } }
+      st_dev: { description: "Device ID from stat()", type: uint32, versions: { "17.0-26.x": 0x14 } }
+      st_ino: { description: "Inode number from stat()", type: uint64, versions: { "17.0-26.x": 0x18 } }
+      data_addr: { description: "ext → extension data pointer", type: pointer, versions: { "17.0-26.x": 0x40 } }
+      data_len: { description: "ext → extension data length", type: uint64, versions: { "17.0-26.x": 0x48 } }
+
+  vnode:
+    description: "File/Directory node — filesystem object representation"
+    verified_by: KDK
+    fields:
+      v_ncchildren_tqh_first: { description: "Namecache children list head", type: pointer, versions: { "17.0-26.x": 0x30 } }
+      v_nclinks_lh_first: { description: "Namecache links list head", type: pointer, versions: { "17.0-26.x": 0x40 } }
+      v_flag: { description: "Vnode flags", type: uint32, versions: { "17.0-26.x": 0x54 } }
+      v_usecount: { description: "Usage reference count", type: uint32, versions: { "17.0-26.x": 0x60 } }
+      v_iocount: { description: "I/O reference count", type: uint32, versions: { "17.0-26.x": 0x64 } }
+      v_writecount: { description: "Write reference count", type: uint32, versions: { "17.0-26.x": 0xb0 } }
+      v_name: { description: "Entry name pointer (256 bytes)", type: pointer, versions: { "17.0-26.x": 0xb8 } }
+      v_parent: { description: "Parent directory vnode", type: pointer, versions: { "17.0-26.x": 0xc0 } }
+      v_mount: { description: "Mount point pointer", type: pointer, versions: { "17.0-26.x": 0xd8 } }
+      v_data: { description: "Filesystem-specific data (apfs_fsnode for APFS)", type: pointer, versions: { "17.0-26.x": 0xe0 } }
+
+  inpcb:
+    description: "Internet Protocol Control Block — target of ICMPv6 filter corruption"
+    verified_by: KDK
+    fields:
+      inp_list_le_next:
+        description: "Next PCB in linked list"
+        type: pointer
+        versions: { "17.0-26.x": 0x20 }
+      inp_pcbinfo:
+        description: "Pointer to pcbinfo zone info"
+        type: pointer
+        versions: { "17.0-26.x": 0x38 }
+      inp_socket:
+        description: "Pointer to owning socket"
+        type: pointer
+        versions: { "17.0-26.x": 0x40 }
+      inp_depend6_inp6_icmp6filt:
+        description: "ICMPv6 filter pointer (corruption target for kernel R/W)"
+        type: pointer
+        versions:
+          "17.0": 0x150
+          "17.1-26.x": 0x148
+      inp_depend6_inp6_chksum:
+        description: "ICMPv6 checksum field"
+        type: uint32
+        versions:
+          "17.0": 0x158
+          "17.1-26.x": 0x150
+
+  inpcbinfo:
+    description: "PCB zone info"
+    verified_by: KDK
+    fields:
+      ipi_zone:
+        description: "Pointer to zone allocator info (for kernel base discovery)"
+        type: pointer
+        versions: { "17.0-26.x": 0x68 }
+
+  socket:
+    description: "Socket structure"
+    verified_by: KDK
+    fields:
+      so_proto:
+        description: "Protocol switch pointer"
+        type: pointer
+        versions:
+          "17.0-17.3": 0x18
+          "17.4-26.x": 0x20
+      so_usecount:
+        description: "Socket usage counter"
+        type: uint32
+        versions:
+          "17.0": 0x22c
+          "17.1-17.3": 0x24c
+          "17.4-18.x": 0x254
+          "26.x": 0x23c
+      so_background_thread:
+        description: "Background thread pointer"
+        type: pointer
+        versions:
+          "17.0": 0x288
+          "17.1-17.3": 0x2a8
+          "17.4-18.x": 0x2b0
+          "26.x": 0x298
+
+  kalloc_type_view:
+    description: "Zone allocator type view (for kernel base string search)"
+    verified_by: KDK
+    fields:
+      kt_zv_zv_name:
+        description: "Zone name string pointer (search for this to find kernel base)"
+        type: pointer
+        versions: { "17.0-26.x": 0x10 }
+
+  thread:
+    description: "Thread of execution — offsets vary by SoC generation AND iOS version"
+    verified_by: pattern_match
+    note: |
+      Thread offsets shift with both iOS version AND SoC generation.
+      The SoC groupings are:
+        A10  — iPhone 7
+        A12  — iPhone XS/XR (base for most offsets)
+        A13+ — iPhone 11/SE2 and later (small delta from A12)
+        A15+ — iPhone 13 and later
+        A17+ — iPhone 15 Pro, M3 iPads
+        A18+ — iPhone 16 and later
+      See `per_soc_offset` tables below for exact values.
+    fields:
+      t_tro:
+        description: "Thread read-only data pointer"
+        type: pointer
+        versions: "see thread_offsets_by_version"
+      ctid:
+        description: "Thread context ID"
+        type: uint64
+        versions: "see thread_offsets_by_version"
+      mutex_lck_mtx_data:
+        description: "Lock owner data (thread mutex hijacking)"
+        type: uint64
+        versions: "see thread_offsets_by_version"
+      machine_kstackptr:
+        description: "Kernel stack pointer (PAC bypass target)"
+        type: pointer
+        versions: "see thread_offsets_by_version"
+      machine_jop_pid:
+        description: "JOP thread PAC key"
+        type: uint64
+        versions: "see thread_offsets_by_version"
+      machine_rop_pid:
+        description: "ROP thread PAC key (jop_pid - 8)"
+        type: uint64
+        versions: "see thread_offsets_by_version"
+      machine_upcb:
+        description: "User PCB pointer"
+        type: pointer
+        versions: "see thread_offsets_by_version"
+      machine_contextdata:
+        description: "Context data pointer (upcb - 8)"
+        type: pointer
+        versions: "see thread_offsets_by_version"
+      guard_exc_info_code:
+        description: "Guard exception code (iOS <18.4 only; renamed to mach_exc_info in 18.4+)"
+        type: uint64
+        versions: "see thread_offsets_by_version"
+      mach_exc_info_code:
+        description: "Mach exception code (replaces guard_exc_info from iOS 18.4+)"
+        type: uint64
+        versions: "see thread_offsets_by_version"
+      mach_exc_info_os_reason:
+        description: "Mach exception OS reason"
+        type: uint64
+        versions: "see thread_offsets_by_version"
+      mach_exc_info_exception_type:
+        description: "Mach exception type"
+        type: uint64
+        versions: "see thread_offsets_by_version"
+      ast:
+        description: "Asynchronous system trap flags"
+        type: uint32
+        versions: "see thread_offsets_by_version"
+      task_threads_next:
+        description: "Next thread in task's thread list (for thread traversal)"
+        type: pointer
+        versions: "see thread_offsets_by_version"
+      options:
+        description: "Thread options flags"
+        type: uint32
+        versions: "see thread_offsets_by_version"
+
+  thread_ro:
+    description: "Read-Only thread data"
+    verified_by: KDK
+    fields:
+      tro_proc:
+        description: "Back-pointer to proc"
+        type: pointer  # SMR-encoded
+        versions:
+          "17.0-17.3": 0x10
+          "17.4-26.x": 0x18
+      tro_task:
+        description: "Back-pointer to task"
+        type: pointer  # SMR-encoded
+        versions:
+          "17.0-17.3": 0x20
+          "17.4-26.x": 0x28
+
+  task:
+    description: "Task structure — Mach task representation"
+    verified_by: KDK
+    fields:
+      map:
+        description: "VM map pointer"
+        type: pointer
+        versions: { "17.0-26.x": 0x28 }
+      threads_next:
+        description: "Thread list head (task → first thread)"
+        type: pointer
+        versions:
+          "17.0-17.7": 0x58
+          "18.0-26.x": 0x50
+      itk_space:
+        description: "IPC space pointer"
+        type: pointer
+        verified_by: pattern_match
+        versions:
+          "17.0-17.7": 0x300
+          "18.0-18.7": 0x318
+          "26.x": 0x310
+
+  filedesc:
+    description: "File descriptor table"
+    verified_by: KDK
+    fields:
+      fd_ofiles:
+        description: "Open file array"
+        type: pointer
+        versions: { "17.0-26.x": 0x28 }
+      fd_cdir:
+        description: "Current directory vnode"
+        type: pointer
+        versions: { "17.0-26.x": 0x48 }
+
+  fileproc:
+    description: "File descriptor → fileproc mapping"
+    verified_by: KDK
+    fields:
+      fp_glob:
+        description: "Fileglob pointer"
+        type: pointer
+        versions: { "17.0-26.x": 0x10 }
+
+  fileglob:
+    description: "Global file state"
+    verified_by: KDK
+    fields:
+      fg_flag:
+        description: "File glob flags (FWRITE, FREAD, etc.)"
+        type: uint32
+        versions: { "17.0-26.x": 0x10 }
+      fg_data:
+        description: "Private data pointer (vnode/socket/pipe)"
+        type: pointer
+        versions: { "17.0-26.x": 0x38 }
+
+  mount:
+    description: "Mount point structure"
+    verified_by: KDK
+    fields:
+      mnt_flag:
+        description: "Mount flags (MNT_RDONLY = bit 0)"
+        type: uint32
+        versions: { "17.0-26.x": 0x70 }
+
+  namecache:
+    description: "Name cache entry"
+    verified_by: KDK
+    fields:
+      nc_child_tqe_next: { type: pointer, versions: { "17.0-26.x": 0x10 } }
+      nc_vp: { type: pointer, versions: { "17.0-26.x": 0x50 } }
+
+  ipc_space:
+    description: "IPC space"
+    verified_by: KDK
+    fields:
+      is_table:
+        description: "IPC entry table pointer"
+        type: pointer
+        versions:
+          "17.0-18.x": 0x20
+          "26.x": 0x48
+
+  ipc_entry:
+    description: "IPC entry"
+    verified_by: KDK
+    fields:
+      ie_object:
+        description: "IPC object pointer"
+        type: pointer
+        versions: { "17.0-26.x": 0x0 }
+    size:
+      value: 0x18
+      versions: "17.0-26.x"
+
+  ipc_port:
+    description: "Mach port"
+    verified_by: KDK
+    fields:
+      ip_kobject:
+        description: "Kernel object pointer"
+        type: pointer
+        versions:
+          "17.0-18.x": 0x48
+          "26.x": 0x50
+
+  vm_map:
+    description: "VM map"
+    verified_by: KDK
+    fields:
+      hdr: { type: pointer, versions: { "17.0-26.x": 0x10 } }
+
+  vm_map_header:
+    description: "VM map header"
+    verified_by: KDK
+    fields:
+      links_next: { type: pointer, versions: { "17.0-26.x": 0x8 } }
+      nentries: { type: uint32, versions: { "17.0-26.x": 0x20 } }
+
+  vm_map_entry:
+    description: "VM map entry"
+    verified_by: KDK
+    fields:
+      links_next: { type: pointer, versions: { "17.0-26.x": 0x8 } }
+      vme_object_or_delta: { type: uint64, versions: { "17.0-26.x": 0x3c } }
+      vme_alias: { type: pointer, versions: { "17.0-26.x": 0x40 } }
+
+  vm_object:
+    description: "VM object"
+    verified_by: KDK
+    fields:
+      vou_size: { type: uint64, versions: { "17.0-26.x": 0x18 } }
+      ref_count: { type: uint32, versions: { "17.0-26.x": 0x28 } }
+
+  vm_named_entry:
+    description: "VM named entry"
+    verified_by: KDK
+    fields:
+      backing_copy: { type: pointer, versions: { "17.0-26.x": 0x10 } }
+      size: { type: uint64, versions: { "17.0-26.x": 0x20 } }
+
+  arm_saved_state64:
+    description: "Arm64 saved register state"
+    verified_by: KDK
+    fields:
+      lr: { type: uint64, versions: { "17.0-26.x": 0xf0 } }
+      pc: { type: uint64, versions: { "17.0-26.x": 0x100 } }
+
+  arm_saved_state:
+    description: "Arm saved state wrapper"
+    verified_by: KDK
+    fields:
+      uss_ss_64: { type: pointer, versions: { "17.0-26.x": 0x8 } }
+
+  arm_kernel_saved_state:
+    description: "Kernel saved register state"
+    verified_by: KDK
+    fields:
+      sp: { type: uint64, versions: { "17.0-26.x": 0x60 } }
+
+  apfs_fsnode:
+    description: "APFS filesystem node format fields (NOT kernel struct — on-disk format within vnode.v_data)"
+    verified_by: documentation
+    note: "Stable within APFS format v11/v12. Validate by reading back mode: should be valid POSIX 0-0777."
+    fields:
+      bsd_flags: { description: "BSD flags (UF_IMMUTABLE, etc.)", type: uint32, versions: { "v11-v12": 0x70 } }
+      owner_uid: { description: "File owner UID", type: uint32, versions: { "v11-v12": 0x80 } }
+      group_gid: { description: "File group GID", type: uint32, versions: { "v11-v12": 0x84 } }
+      mode_bits: { description: "POSIX mode (00777)", type: uint16, versions: { "v11-v12": 0x88 } }
+
+  OSEntitlements:
+    description: "Entitlements structure (reverse-engineered from excalibur/amfi_research.h)"
+    verified_by: documentation
+    layouts:
+      ios17_flat:
+        versions: "17.0-17.x"
+        fields:
+          vtable: 0x00
+          refcount: 0x08
+          dict: 0x10
+          profile: 0x18
+      ios18_inline:
+        versions: "18.0+"
+        fields:
+          vtable: 0x00
+          ceQueryContext_version: 0x08
+          dict: 0x10
+          entries: 0x18
+
+  CodeDirectory:
+    description: "Mach-O Code Directory (code signing)"
+    verified_by: documentation
+    fields:
+      version: 0x00
+      flags: 0x04
+      hashOffset: 0x08
+      identOffset: 0x0C
+      nSpecialSlots: 0x10
+      nCodeSlots: 0x14
+      codeLimit: 0x18
+      hashSize: 0x1C
+      hashType: 0x1D
+
+# ─────────────────────────────────────────────────
+# PER-SOC THREAD OFFSETS BY iOS VERSION
+# ─────────────────────────────────────────────────
+
+thread_offsets_by_version:
+
+  "17.0.x":
+    description: "iOS 17.0 — initial release"
+    socs:
+      A10:  { t_tro: 0x388, ctid: 0x438, mutex: 0x3b8, kstackptr: 0x130, jop_pid: "0xdeaddead", rop_pid: "0xdeaddead", upcb: 0xf8, contextdata: 0xf0, guard_exc: 0x338, ast: 0x3ac, threads_next: 0x378, options: 0xb8 }
+      A12:  { t_tro: 0x358, ctid: 0x408, mutex: 0x388, kstackptr: 0xe8, jop_pid: 0x158, rop_pid: 0x150, upcb: 0xb0, contextdata: 0xa8, guard_exc: 0x308, ast: 0x37c, threads_next: 0x348, options: 0x70 }
+      A13:  { t_tro: 0x368, ctid: 0x418, mutex: 0x398, kstackptr: 0xf0, jop_pid: 0x160, rop_pid: 0x158, upcb: 0xb0, contextdata: 0xa8, guard_exc: 0x318, ast: 0x38c, threads_next: 0x358, options: 0x70 }
+      A15:  { t_tro: 0x370, ctid: 0x420, mutex: 0x3a0, kstackptr: 0xf0, jop_pid: 0x168, rop_pid: 0x160, upcb: 0xb0, contextdata: 0xa8, guard_exc: 0x320, ast: 0x394, threads_next: 0x360, options: 0x70 }
+      A17:  { t_tro: 0x3c0, ctid: 0x470, mutex: 0x3f0, kstackptr: 0x140, jop_pid: 0x1B8, rop_pid: 0x1B0, upcb: 0x100, contextdata: 0xf8, guard_exc: 0x370, ast: 0x3e4, threads_next: 0x3b0, options: 0xc0 }
+      A18:  { t_tro: 0x370, ctid: 0x420, mutex: 0x3a0, kstackptr: 0xf0, jop_pid: 0x168, rop_pid: 0x160, upcb: 0x100, contextdata: 0xf8, guard_exc: 0x320, ast: 0x394, threads_next: 0x360, options: 0xc0 }
+
+  "17.1-17.3":
+    socs:
+      A10:  { t_tro: 0x398, ctid: 0x448, mutex: 0x3c8, guard_exc: 0x348, ast: 0x3BC, threads_next: 0x388 }
+      A12:  { t_tro: 0x368, ctid: 0x418, mutex: 0x398, guard_exc: 0x318, ast: 0x38C, threads_next: 0x358 }
+      A13:  { t_tro: 0x378, ctid: 0x428, mutex: 0x3a8, guard_exc: 0x328, ast: 0x39c, threads_next: 0x368 }
+      A15:  { t_tro: 0x380, ctid: 0x430, mutex: 0x3b0, guard_exc: 0x330, ast: 0x3A4, threads_next: 0x370 }
+      A17:  { t_tro: 0x3d0, ctid: 0x480, mutex: 0x400, guard_exc: 0x380, ast: 0x3F4, threads_next: 0x3c0 }
+
+  "17.4-17.7":
+    socs:
+      A10:  { t_tro: 0x3a0, ctid: 0x450, mutex: 0x3d0, guard_exc: 0x350, ast: 0x3c4, threads_next: 0x390, task_exc_guard: 0x59c }
+      A12:  { t_tro: 0x370, ctid: 0x420, mutex: 0x3a0, guard_exc: 0x320, ast: 0x394, threads_next: 0x360, task_exc_guard: 0x5bc }
+      A13:  { t_tro: 0x380, ctid: 0x430, mutex: 0x3b0, guard_exc: 0x330, ast: 0x3a4, threads_next: 0x370, task_exc_guard: 0x5bc }
+      A15:  { t_tro: 0x388, ctid: 0x438, mutex: 0x3b8, guard_exc: 0x338, ast: 0x3ac, threads_next: 0x378, task_exc_guard: 0x5d4 }
+      A17:  { t_tro: 0x3d8, ctid: 0x488, mutex: 0x408, guard_exc: 0x388, ast: 0x3fc, threads_next: 0x3c8, task_exc_guard: 0x5d4 }
+      A18:  { t_tro: 0x3E0, ctid: 0x4a0, mutex: 0x410, guard_exc: 0x390, ast: 0x404, threads_next: 0x3D0, task_exc_guard: 0x5DC }
+
+  "18.0.x":
+    socs:
+      A10:  { t_tro: 0x3A8, ctid: 0x458, mutex: 0x3d8, kstackptr: 0x138, jop_pid: "0xdeaddead", rop_pid: "0xdeaddead", upcb: 0x100, contextdata: 0xf8, guard_exc: 0x350, ast: 0x3cc, threads_next: 0x398, options: 0xb8, task_exc_guard: 0x5c4 }
+      A12:  { t_tro: 0x378, ctid: 0x428, mutex: 0x3a8, kstackptr: 0xF0, jop_pid: 0x160, rop_pid: 0x158, upcb: 0xb8, contextdata: 0xb0, guard_exc: 0x320, ast: 0x39C, threads_next: 0x368, options: 0x70, task_exc_guard: 0x5dc }
+      A13:  { t_tro: 0x388, ctid: 0x438, mutex: 0x3B8, kstackptr: 0xF8, jop_pid: 0x168, rop_pid: 0x160, upcb: 0xb8, contextdata: 0xb0, guard_exc: 0x330, ast: 0x3ac, threads_next: 0x378, options: 0x70, task_exc_guard: 0x5dc }
+      A15:  { t_tro: 0x390, ctid: 0x440, mutex: 0x3C0, kstackptr: 0xF8, jop_pid: 0x170, rop_pid: 0x168, upcb: 0xb8, contextdata: 0xb0, guard_exc: 0x338, ast: 0x3b4, threads_next: 0x380, options: 0x70, task_exc_guard: 0x5f4 }
+      A17:  { t_tro: 0x3E0, ctid: 0x490, mutex: 0x410, kstackptr: 0x148, jop_pid: 0x1c0, rop_pid: 0x1B8, upcb: 0x108, contextdata: 0x100, guard_exc: 0x388, ast: 0x404, threads_next: 0x3d0, options: 0xC0, task_exc_guard: 0x5dc }
+      A18:  { t_tro: 0x3E8, ctid: 0x4A8, mutex: 0x418, kstackptr: 0x148, jop_pid: 0x1c0, rop_pid: 0x1B8, upcb: 0x108, contextdata: 0x100, guard_exc: 0x390, ast: 0x40C, threads_next: 0x3d8, options: 0xC0, task_exc_guard: 0x5fc }
+
+  "18.1-18.3":
+    socs:
+      A10:  { t_tro: 0x3A0, ctid: 0x450, mutex: 0x3D0, ast: 0x3C4, threads_next: 0x390 }
+      A12:  { t_tro: 0x370, ctid: 0x420, mutex: 0x3a0, ast: 0x394, threads_next: 0x360 }
+      A13:  { t_tro: 0x380, ctid: 0x430, mutex: 0x3B0, ast: 0x3A4, threads_next: 0x370 }
+      A15:  { t_tro: 0x388, ctid: 0x438, mutex: 0x3B8, ast: 0x3AC, threads_next: 0x378 }
+      A17:  { t_tro: 0x3D8, ctid: 0x488, mutex: 0x408, ast: 0x3FC, threads_next: 0x3C8 }
+      A18:  { t_tro: 0x3E0, ctid: 0x4A0, mutex: 0x410, ast: 0x404, threads_next: 0x3D0 }
+
+  "18.4-18.5":
+    note: "guard_exc_info renamed to mach_exc_info from 18.4"
+    socs:
+      A10:  { t_tro: 0x3A8, ctid: 0x458, mutex: 0x3D8, mach_exc_code: 0x358, mach_exc_os_reason: 0x350, mach_exc_exception_type: 0x354, ast: 0x3CC, threads_next: 0x398, task_exc_guard: 0x5E4 }
+      A12:  { t_tro: 0x378, ctid: 0x428, mutex: 0x3a8, mach_exc_code: 0x328, mach_exc_os_reason: 0x320, mach_exc_exception_type: 0x324, ast: 0x39C, threads_next: 0x368, task_exc_guard: 0x5FC }
+      A13:  { t_tro: 0x388, ctid: 0x438, mutex: 0x3B8, mach_exc_code: 0x338, mach_exc_os_reason: 0x330, mach_exc_exception_type: 0x334, ast: 0x3AC, threads_next: 0x378, task_exc_guard: 0x5FC }
+      A15:  { t_tro: 0x390, ctid: 0x448, mutex: 0x3C0, mach_exc_code: 0x340, mach_exc_os_reason: 0x338, mach_exc_exception_type: 0x33c, ast: 0x3B4, threads_next: 0x380, task_exc_guard: 0x624 }
+      A17:  { t_tro: 0x3E0, ctid: 0x498, mutex: 0x410, mach_exc_code: 0x390, mach_exc_os_reason: 0x388, mach_exc_exception_type: 0x38c, ast: 0x404, threads_next: 0x3D0, task_exc_guard: 0x5FC }
+      A18:  { t_tro: 0x3E8, ctid: 0x4A8, mutex: 0x418, mach_exc_code: 0x398, mach_exc_os_reason: 0x390, mach_exc_exception_type: 0x394, ast: 0x40C, threads_next: 0x3D8, task_exc_guard: 0x5FC }
+
+  "18.6-18.7":
+    socs:
+      A12:  { t_tro: 0x380, ctid: 0x430, mutex: 0x3b0, mach_exc_code: 0x330, mach_exc_os_reason: 0x328, mach_exc_exception_type: 0x32c, ast: 0x3A4, threads_next: 0x370 }
+      A13:  { t_tro: 0x390, ctid: 0x440, mutex: 0x3C0, mach_exc_code: 0x340, mach_exc_os_reason: 0x338, mach_exc_exception_type: 0x33c, ast: 0x3B4, threads_next: 0x380 }
+      A15:  { t_tro: 0x398, ctid: 0x450, mutex: 0x3C8, mach_exc_code: 0x348, mach_exc_os_reason: 0x340, mach_exc_exception_type: 0x344, ast: 0x3bc, threads_next: 0x388 }
+      A17:  { t_tro: 0x3E8, ctid: 0x4a0, mutex: 0x418, mach_exc_code: 0x398, mach_exc_os_reason: 0x390, mach_exc_exception_type: 0x394, ast: 0x40C, threads_next: 0x3D8 }
+      A18:  { t_tro: 0x3F0, ctid: 0x4b0, mutex: 0x420, mach_exc_code: 0x3a0, mach_exc_os_reason: 0x398, mach_exc_exception_type: 0x39c, ast: 0x414, threads_next: 0x3E0 }
+
+  "26.0.x":
+    socs:
+      A12:  { t_tro: 0x390, ctid: 0x430, mutex: 0x3b0, kstackptr: 0xf0, jop_pid: 0x160, rop_pid: 0x158, upcb: 0xb8, contextdata: 0xb0, mach_exc_code: 0x330, mach_exc_os_reason: 0x328, mach_exc_exception_type: 0x32c, ast: 0x3A4, threads_next: 0x370, options: 0x70, task_exc_guard: 0x5d4 }
+      A13:  { t_tro: 0x390, ctid: 0x440, mutex: 0x3C0, kstackptr: 0xf8, jop_pid: 0x168, rop_pid: 0x160, upcb: 0xb8, contextdata: 0xb0, mach_exc_code: 0x340, mach_exc_os_reason: 0x338, mach_exc_exception_type: 0x33c, ast: 0x3b4, threads_next: 0x380, options: 0x70, task_exc_guard: 0x5d4 }
+      A15:  { t_tro: 0x398, ctid: 0x450, mutex: 0x3C8, kstackptr: 0xf8, jop_pid: 0x170, rop_pid: 0x168, upcb: 0xb8, contextdata: 0xb0, mach_exc_code: 0x348, mach_exc_os_reason: 0x340, mach_exc_exception_type: 0x344, ast: 0x3BC, threads_next: 0x388, options: 0x70, task_exc_guard: 0x5fc }
+      A17:  { t_tro: 0x3e8, ctid: 0x4a0, mutex: 0x418, kstackptr: 0x148, jop_pid: 0x1c0, rop_pid: 0x1b8, upcb: 0x108, contextdata: 0x100, mach_exc_code: 0x398, mach_exc_os_reason: 0x390, mach_exc_exception_type: 0x394, ast: 0x40c, threads_next: 0x3d8, options: 0xc0, task_exc_guard: 0x5d4 }
+      A18:  { t_tro: 0x3f0, ctid: 0x4b0, mutex: 0x420, kstackptr: 0x148, jop_pid: 0x1c0, rop_pid: 0x1b8, upcb: 0x108, contextdata: 0x100, mach_exc_code: 0x3a0, mach_exc_os_reason: 0x398, mach_exc_exception_type: 0x39c, ast: 0x414, threads_next: 0x3e0, options: 0xc0, task_exc_guard: 0x604 }
+
+# ─────────────────────────────────────────────────
+# CONSTANTS
+# ─────────────────────────────────────────────────
+
+constants:
+  t1sz:
+    description: "Translation Table Level 1 Size — determines address width and SMR decoding"
+    values:
+      A12_15: { value: 25, hex: "0x19", address_bits: 47, paging: "4-level (standard TTBR encoding)" }
+      A16_plus: { value: 17, hex: "0x11", address_bits: 47, paging: "4-level (different TTBR encoding)" }
+    usage: "SMR decode: bits = (smr_base << (62 - t1sz_boot)). Wrong T1SZ → all SMR pointers corrupt."
+
+  smr_base:
+    description: "Signed Memory Region base — used in SMR pointer decoding"
+    values:
+      pre_17: { value: 1, note: "older iOS versions" }
+      17_26: { value: 2, note: "iOS 17.0-26.x" }
+    usage: "kread_smrptr(va) uses smr_base to decode. If wrong, every SMR-decoded pointer is corrupt."
+
+  vm:
+    min_kernel_address:
+      iphone: "0xFFFFFFDC00000000"
+      ipad_m_series: "0xFFFFFE0000000000"
+    max_kernel_address:
+      iphone: "0xFFFFFFFBFFFFFFFF"
+      ipad_m_series: "0xFFFFFE8FFFFFFFFF"
+
+  mach_o:
+    magic_64: "0x100000cfeedfacf"
+    cputype:
+      ios_16_18: "0xC00000002"
+      ios_26: "0xCC0000002"
+    link_addr: "0xFFFFFFF007004000"
+
+  pac:
+    strip_mask_typical: "0x7FFFFFFFFFF"
+    string_discriminators:
+      pc: "0x7481000000000000"
+      lr: "0x77d3000000000000"
+      sp: "0xcbed000000000000"
+      fp: "0x4517000000000000"
+    instructions:
+      pacia_x16_x17: "0xDAC10230"
+      xpaci_x0: "0xDAC143E0"
+
+  code_signing:
+    flags:
+      CS_HARD: "0x100"
+      CS_KILL: "0x200"
+      CS_RESTRICT: "0x800"
+    lc_code_signature: "0x1D"
+
+  mount:
+    MNT_RDONLY: "0x00000001"
+    FWRITE: "0x00000002"
+
+  rop:
+    loop_gadget: "0x00000014"
+    thread_state_size: "0x360"
+    arm_sp_alignment: 16
+
+  perfmon:
+    cdevsw_major: "0x11"
+
+  checkm8:
+    ios_27_0b2:
+      ibss_image4_validate: "0x23EFC"
+      ibss_boot_args_ptr: "0x2B0F4"
+      ibss_boot_args_string: "0xD3960"
+      txm_queryModule0: "0x39ca8"
+      txm_queryModule1: "0x39e10"
+      txm_queryModule2: "0x39fa4"
+      txm_constraints_sig: "0x3f510"
+      txm_allowedBeforeSecure: "0x2bcb4"
+      mobileactivationd_should_hactivate: "0x2EBB14"
+
+  webkit:
+    ios_18_4:
+      worker_global_markers: ["0x11111111", "0x22222222", "0x33333333"]
+      imagebuffer_class_ptr_offset: "0x20"
+      gpu_ipc:
+        CreateShader: "0x446"
+        CompileShader: "0x432"
+        ShaderSource: "0x496"
+        GetShaderSource: "0xF25"
+        BufferData: "0x426"
+
+  ipc:
+    ipc_entry_size: "0x18"
+    early_krw_length: "0x20"
+
+# ─────────────────────────────────────────────────
+# SOC MAPPINGS
+# ─────────────────────────────────────────────────
+
+soc_mappings:
+  A10: { devices: ["iPhone 7", "iPhone 7 Plus"], generation: 10 }
+  A12: { devices: ["iPhone XS", "iPhone XS Max", "iPhone XR"], generation: 12 }
+  A13: { devices: ["iPhone 11", "iPhone 11 Pro", "iPhone 11 Pro Max", "iPhone SE 2nd gen"], generation: 13 }
+  A14: { devices: ["iPhone 12 series"], generation: 14, checkm8: false }
+  A15: { devices: ["iPhone 13 series", "iPhone 14 (non-Pro)"], generation: 15 }
+  A16: { devices: ["iPhone 14 Pro", "iPhone 14 Pro Max", "iPhone 15 (non-Pro)"], generation: 16 }
+  A17: { devices: ["iPhone 15 Pro", "iPhone 15 Pro Max", "iPad M3"], generation: 17 }
+  A18: { devices: ["iPhone 16 series"], generation: 18 }
+  M1: { devices: ["iPad Pro M1", "iPad Air M1", "Mac"], generation: "M1" }
+  M2: { devices: ["iPad Pro M2", "iPad Air M2", "Mac"], generation: "M2" }
+  M3: { devices: ["iPad Pro M3", "Mac"], generation: "M3" }
+  M4: { devices: ["iPad Pro M4"], generation: "M4" }
+
+# ─────────────────────────────────────────────────
+# VALIDATION PATTERNS
+# ─────────────────────────────────────────────────
+
+validation:
+  proc_self_pid: "kread32(proc + off_p_pid) == getpid()"
+  proc_ro_valid: "is_kaddr_valid(xpaci(kread64(proc + off_p_proc_ro)))"
+  apfs_fsnode_mode: "mode & 0777 should be a valid POSIX permission (0-0777)"
+  kernel_base_find: "search backward from kalloc_type_view zv_name for 0xFEEDFACF"
+  kernel_base_verify: "addr+8 should be 0xC00000002 (iOS 16-18) or 0xCC0000002 (iOS 26)"

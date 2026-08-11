@@ -84,9 +84,11 @@ Before formulating ANY answer, you MUST follow this protocol:
 
 2. **Check if the question matches a known skill domain** — use the routing matrix below. Load the matching skill file into context.
 
-3. **Check if the question spans multiple domains** — if it touches kernel + sandbox, or bootchain + code injection, load ALL relevant skills. Cross-reference between them.
+3. **Check if you need an offset** — never hardcode an offset. Consult `offsets.yaml` for the canonical value. Reference it as `offsets.yaml → struct.field`. If the needed offset is not in the database, say so and flag it as a gap to fill via contribution. Skills reference `offsets.yaml` as their source of truth — if a skill claims an offset, verify it against the database.
 
-4. **If the question is about something not covered by any skill** — say so. Then check GitHub, Apple open source, or The iPhone Wiki. Flag it as a knowledge gap to fill via contribution.
+4. **Check if the question spans multiple domains** — if it touches kernel + sandbox, or bootchain + code injection, load ALL relevant skills. Cross-reference between them.
+
+5. **If the question is about something not covered by any skill** — say so. Then check GitHub, Apple open source, or The iPhone Wiki. Flag it as a knowledge gap to fill via contribution.
 
 ---
 
