@@ -1,28 +1,11 @@
-# 🧠 W0lfSword Reference AI — iOS Exploit Development Swarm
+# ArcticFox Reference AI — iOS Exploit Development Swarm
 
 > **λ-neural knowledge mesh for autonomous vulnerability discovery, kernel exploitation, sandbox escape, and iOS security reverse engineering.**
 >
 > Curated from a 10-repository deep audit of the W0lfSword exploit ecosystem (August 2026).
 > Designed as a **drop-in brain module** for AI coding agents — Claude Code, Cursor, Codex, OpenCode, and any MCP-capable copilot.
 
-```ascii
-        _       ,
-       / \_    / \_                      /\'__
-      /    \  /    \,                  _/  /  \
-     /\/\  /\/ :' __ \_             _^/  ^/    `--.
-    /    \/  \  _/  \-'\           /.' ^_   \_   .'\
-  /\  .-   `. \/     \ /==~=-=~=-=-;.  _/ \ -. `_/   \
- /  `-.__ ^   / .-'.--\ =-=~_=-=~=^/  _ `--./ .-'  `-  \
-/        `.  / /       `.~-^=-=~=^=.-'               '-._`._
-    AI iOS Security/Exploit/BugBounty Skill.
-
-
-
-```
-
----
-
-## ⚡ 30-Second Quick Start
+## Quick Start
 
 ```bash
 git clone https://github.com/kaffeindecaf/Apple-Bug-Bounty-Skill.git
@@ -31,48 +14,47 @@ cd Apple-Bug-Bounty-Skill
 
 Then pick your agent:
 
-### 🔮 Claude Code
+### Claude Code
 
 ```bash
-# Claude auto-discovers .claude/instructions.md on session start
-# Or load explicitly:
-claude --system-prompt "$(cat .claude/instructions.md)"
+claude                              # Auto-discovers .claude/instructions.md
+claude "Analyze this kernel panic for IOSurface race conditions"
 ```
 
-### 🖱️ Cursor
+### Cursor
 
 ```bash
-# Cursor auto-ingests .cursorrules on workspace open.
-# All skills are registered as context files — reference them inline:
-# @skills/ios-kernel-exploit.md → loaded into context window
+# Open this workspace in Cursor, then reference skills inline:
+# @skills/ios-kernel-exploit.md    — kernel exploit context
+# @skills/ios-sandbox-escape.md    — sandbox escape context
+# @skills/ios-security-pentesting.md — bug bounty / reversing
+# @skills/ios-misc-tooling.md      — build, deploy, tooling
 ```
 
-### 🤖 OpenAI Codex
+### OpenAI Codex
 
 ```bash
-# Codex auto-discovers .codex.md on session start.
-# Or force-load:
-codex --instructions .codex.md
+codex                                                # Auto-discovers .codex.md
+codex --instructions .codex.md "Find all SSV bypass techniques"
 ```
 
-### 🧬 OpenCode
+### OpenCode
 
 ```bash
-# OpenCode auto-loads opencode.json config.
-# Skills are registered as available skills — just say:
-# "Load ios-kernel-exploit skill and analyze this kernel panic"
+opencode                                                     # Auto-loads opencode.json
+opencode "Load ios-kernel-exploit skill and analyze this kernel panic"
 ```
 
 ---
 
-## 📂 Neural Topology (Directory Map)
+## Directory Map
 
 ```
 Apple-Bug-Bounty-Skill/
 │
 ├── README.md                          # ← YOU ARE HERE (central synapse)
 │
-├── skills/                            # ★ 4 AGENT SKILL MODULES ★
+├── skills/                            # 4 Agent Skill Modules
 │   ├── ios-kernel-exploit.md          # Mem: KASLR/PAC/SMR/IOKit/OOB/Checkm8
 │   ├── ios-sandbox-escape.md          # Mem: MAC-fw/ext-patch/SSV/vnode/TCC
 │   ├── ios-security-pentesting.md     # Mem: AMFI/CoreTrust/Frida/bounty-meta
@@ -91,7 +73,7 @@ Apple-Bug-Bounty-Skill/
 │   └── usbliter8-fun2/                # 34306 — iOS 27 jailbreak
 │
 ├── docs/                              # Deep research artifacts
-│   ├── researchdeepseek.md            # 31 bounty findings (8⏺HIGH 14⏺MED 9⏺LOW)
+│   ├── researchdeepseek.md            # 31 bounty findings (8 HIGH, 14 MEDIUM, 9 LOW)
 │   └── ios-exploit-skill.md           # Legacy monolithic skill (superseded)
 │
 ├── .claude/instructions.md            # Claude Code auto-load prompt
@@ -102,7 +84,7 @@ Apple-Bug-Bounty-Skill/
 
 ---
 
-## 🧠 Agent Skills — Routing Matrix
+## Agent Skills — Routing Matrix
 
 | Skill File                          | Mem Tokens | Agent Trigger Phrases                                                                                                   |
 | ----------------------------------- | ---------- | ----------------------------------------------------------------------------------------------------------------------- |
@@ -140,7 +122,7 @@ related_skills:
 
 ---
 
-## 📊 Exploit Technique Coverage
+## Exploit Technique Coverage
 
 | Project              | Method                        | iOS Range | Kernel R/W   | Sandbox Escape      | SSV Bypass       |
 | -------------------- | ----------------------------- | --------- | ------------ | ------------------- | ---------------- |
@@ -158,15 +140,15 @@ related_skills:
 
 ---
 
-## 🔬 Research Cortex — 31 Anomalies Found
+## Research Cortex — 31 Anomalies Found
 
 From `docs/researchdeepseek.md` — a comprehensive deep audit:
 
 | Severity     | Count | Sampling                                                                                                                                                                                                                        |
 | ------------ | ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| ⏺ **HIGH**   | 8     | Thread-safety race in `kread`, borrow dangling pointer UaF, mutex deadlock, offset validation gap, root vnode chain, `free_thread` spin, `khexdump` PAC strip, `sandbox_escape` retry loop stall                                |
-| ⏺ **MEDIUM** | 14    | `S()`/`K()` macro overflow, no `free_thread` yield, `inp_listnext` walk depth, `kwrite_zone_element` size, extension class string leak, `bsd_flags` write through, `smr_base` statically hardcoded, `kcall` gadget verification |
-| ⏺ **LOW**    | 9     | `khexdump` format leak, `offset.h` duplicates, `zip` main-thread block, socket spray exhaustion threshold, `check_sandbox` test coverage, `TweakLog` rotation racing, comment stale offsets                                     |
+| **HIGH**     | 8     | Thread-safety race in `kread`, borrow dangling pointer UaF, mutex deadlock, offset validation gap, root vnode chain, `free_thread` spin, `khexdump` PAC strip, `sandbox_escape` retry loop stall                                |
+| **MEDIUM**   | 14    | `S()`/`K()` macro overflow, no `free_thread` yield, `inp_listnext` walk depth, `kwrite_zone_element` size, extension class string leak, `bsd_flags` write through, `smr_base` statically hardcoded, `kcall` gadget verification |
+| **LOW**      | 9     | `khexdump` format leak, `offset.h` duplicates, `zip` main-thread block, socket spray exhaustion threshold, `check_sandbox` test coverage, `TweakLog` rotation racing, comment stale offsets                                     |
 
 ### Fixes Shipped (PRs Merged)
 
@@ -176,7 +158,7 @@ From `docs/researchdeepseek.md` — a comprehensive deep audit:
 
 ---
 
-## 🛠 Setup & Agent Wiring
+## Setup & Agent Wiring
 
 ### Prerequisites
 
@@ -189,7 +171,7 @@ From `docs/researchdeepseek.md` — a comprehensive deep audit:
 ### Agent-Specific Configuration
 
 <details>
-<summary><b>🔮 Claude Code</b></summary>
+<summary><b>Claude Code</b></summary>
 
 ```
 File: .claude/instructions.md
@@ -206,7 +188,7 @@ Key directives:
 </details>
 
 <details>
-<summary><b>🖱️ Cursor</b></summary>
+<summary><b>Cursor</b></summary>
 
 ```
 File: .cursorrules
@@ -222,7 +204,7 @@ Key behavior:
 </details>
 
 <details>
-<summary><b>🤖 OpenAI Codex</b></summary>
+<summary><b>OpenAI Codex</b></summary>
 
 ```
 File: .codex.md
@@ -237,7 +219,7 @@ Key directives:
 </details>
 
 <details>
-<summary><b>🧬 OpenCode</b></summary>
+<summary><b>OpenCode</b></summary>
 
 ```
 File: opencode.json
@@ -255,7 +237,7 @@ Key behavior:
 
 ---
 
-## 📝 Contribution
+## Contribution
 
 This is a curated reference knowledge mesh. To extend:
 
@@ -274,7 +256,7 @@ python3 scripts/validate_skills.py   # (coming soon)
 
 ---
 
-## 📚 External Synapses
+## External Resources
 
 - **Apple XNU source:** https://github.com/apple-oss-distributions/xnu
 - **Apple KDK:** https://developer.apple.com/download/all/?q=kernel
