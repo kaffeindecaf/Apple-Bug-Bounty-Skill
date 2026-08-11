@@ -53,16 +53,6 @@ log_warn()  { echo -e "  ${YELLOW}[WARN]${NC}  $1"; }
 log_err()   { echo -e "  ${RED}[ERROR]${NC} $1"; }
 log_step()  { echo -e "\n${BOLD}${CYAN}─── $1 ───${NC}"; }
 
-spin() {
-    local pid=$1 msg="$2" i=0 chars="/-\|"
-    while kill -0 "$pid" 2>/dev/null; do
-        printf "\r  ${BLUE}[%s]${NC} %s" "${chars:i++%4:1}" "$msg"
-        sleep 0.1
-    done
-    printf "\r"
-    wait "$pid"
-}
-
 # ─────────────────────────────────────────────────
 # PROGRESS BAR
 # ─────────────────────────────────────────────────
@@ -86,7 +76,7 @@ draw_progress_bar() {
 clone_with_progress() {
     local url="$1" dest="$2"
     local tmpfile
-    tmpfile=$(mktemp)
+    tmpfile=$(mktemp /tmp/abb-install.XXXXXX)
 
     log_info "Cloning $url into $dest ..."
     echo ""
@@ -131,7 +121,7 @@ clone_with_progress() {
 pull_with_progress() {
     local workdir="$1"
     local tmpfile
-    tmpfile=$(mktemp)
+    tmpfile=$(mktemp /tmp/abb-install.XXXXXX)
 
     (
         cd "$workdir"
@@ -234,7 +224,7 @@ check_deps() {
 # ─────────────────────────────────────────────────
 
 AGENTS=()
-declare -A AGENT_NAMES AGENT_CONFIGS AGENT_PATHS AGENT_DETECT
+declare -A AGENT_NAMES AGENT_CONFIGS AGENT_PATHS AGENT_DETECT AGENT_IDX
 
 detect_agents() {
     log_step "Detecting Installed AI Agents"
@@ -277,7 +267,7 @@ detect_agents() {
     fi
 
     # OpenCode
-    local opencode_found=false opencode_version="unknown"
+    local opencode_version="unknown"
     if command -v opencode &>/dev/null; then
         opencode_version=$(opencode --version 2>/dev/null || echo "unknown")
         AGENTS+=("opencode")
@@ -286,7 +276,6 @@ detect_agents() {
         AGENT_PATHS["opencode"]="$SKILL_DIR"
         AGENT_DETECT["opencode"]="cli at: $(command -v opencode) (v${opencode_version})"
         log_ok "OpenCode detected — ${AGENT_DETECT["opencode"]}"
-        opencode_found=true
     else
         log_info "OpenCode not detected (see: https://opencode.ai)"
     fi
@@ -316,7 +305,7 @@ detect_agents() {
     fi
 
     # Gemini
-    if command -v gemini &>/dev/null || [ -f "$HOME/.gemini/config.json" ] 2>/dev/null; then
+    if command -v gemini &>/dev/null || [ -f "$HOME/.gemini/config.json" ]; then
         AGENTS+=("gemini")
         AGENT_NAMES["gemini"]="Google Gemini"
         AGENT_CONFIGS["gemini"]="GEMINI.md"
@@ -357,7 +346,7 @@ select_agents() {
     echo ""
 
     local idx=1
-    declare -gA AGENT_IDX
+    for key in "${!AGENT_IDX[@]}"; do unset 'AGENT_IDX[$key]'; done
     for agent in "${AGENTS[@]}"; do
         local name="${AGENT_NAMES[$agent]}"
         local detect="${AGENT_DETECT[$agent]}"
@@ -494,6 +483,7 @@ clone_or_update_repo() {
     local required=(
         "SKILL.md"
         "opencode.json"
+        "offsets.yaml"
         "options/SYSTEM.md"
         "skills/ios-kernel-exploit.md"
         "skills/ios-sandbox-escape.md"

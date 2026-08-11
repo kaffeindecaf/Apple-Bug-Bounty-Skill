@@ -328,14 +328,25 @@ function Clone-Or-Update {
         Write-Info "Pulling latest changes..."
         Push-Location $SkillDir
         try {
-            git pull --ff-only origin main 2>&1 | ForEach-Object { Write-Info "  git: $_" }
+            $output = git pull --ff-only origin main 2>&1
+            if ($LASTEXITCODE -ne 0) {
+                Write-Warn "Pull may have had issues (exit code: $LASTEXITCODE), continuing"
+            }
+            if ($output) {
+                $output | ForEach-Object { Write-Info "  git: $_" }
+            }
             Write-Ok "Repository updated"
         } finally {
             Pop-Location
         }
     } else {
         Write-Info "Cloning into $SkillDir..."
-        git clone --depth 1 $RepoUrl $SkillDir 2>&1 | ForEach-Object { Write-Info "  git: $_" }
+        $output = git clone --depth 1 $RepoUrl $SkillDir 2>&1
+        if ($LASTEXITCODE -ne 0) {
+            Write-Err "Clone failed (exit code: $LASTEXITCODE)"
+            if ($output) { $output | ForEach-Object { Write-Err "  git: $_" } }
+            exit 1
+        }
         Write-Ok "Repository cloned"
     }
 
@@ -364,6 +375,67 @@ function Clone-Or-Update {
             Write-Err "Missing: $f — repository may be corrupted"
         }
     }
+}
+
+# ─────────────────────────────────────────────────
+# OPencode SKILL SETUP
+# ─────────────────────────────────────────────────
+
+function Setup-OpenCodeSkills {
+    Write-Step "Setting Up OpenCode Skill Discovery"
+    Write-Info "OpenCode discovers skills from .opencode/skills/<name>/SKILL.md"
+    Write-Info "Creating OpenCode skill directory structure..."
+
+    $skillsDir = Join-Path $SkillDir ".opencode\skills"
+    if (Test-Path $skillsDir) {
+        Remove-Item -Recurse -Force $skillsDir
+    }
+    New-Item -ItemType Directory -Path $skillsDir -Force | Out-Null
+
+    $skillMap = @{
+        "master-router"              = "SKILL.md"
+        "ios-kernel-exploit"         = "skills\ios-kernel-exploit.md"
+        "ios-sandbox-escape"         = "skills\ios-sandbox-escape.md"
+        "ios-security-pentesting"    = "skills\ios-security-pentesting.md"
+        "ios-misc-tooling"           = "skills\ios-misc-tooling.md"
+        "ios-bootchain-exploit"      = "skills\ios-bootchain-exploit.md"
+        "ios-code-injection"         = "skills\ios-code-injection.md"
+        "ios-webkit-exploit"         = "skills\ios-webkit-exploit.md"
+        "ios-puaf-exploit"           = "skills\ios-puaf-exploit.md"
+        "ios-coretrust-bypass"       = "skills\ios-coretrust-bypass.md"
+        "ios-research-methodology"   = "skills\ios-research-methodology.md"
+    }
+
+    $total = $skillMap.Count
+    $count = 0
+
+    foreach ($name in $skillMap.Keys) {
+        $src = Join-Path $SkillDir $skillMap[$name]
+        $dstdir = Join-Path $skillsDir $name
+        New-Item -ItemType Directory -Path $dstdir -Force | Out-Null
+
+        if (Test-Path $src) {
+            try {
+                New-Item -ItemType SymbolicLink -Path (Join-Path $dstdir "SKILL.md") -Target $src -Force -ErrorAction Stop | Out-Null
+            } catch {
+                Copy-Item $src (Join-Path $dstdir "SKILL.md") -Force
+            }
+            $count++
+        } else {
+            Write-Warn "Skill source not found: $src"
+        }
+    }
+
+    Write-Ok "Created $count OpenCode skill links in $skillsDir"
+
+    $targetJson = Join-Path $SkillDir "opencode.json"
+    if (Test-Path $targetJson) {
+        $backup = "$targetJson.bak.$(Get-Date -Format 'yyyyMMddHHmmss')"
+        Copy-Item $targetJson $backup
+        Write-Info "Backed up existing opencode.json to $backup"
+    }
+
+    Write-Info "OpenCode skill discovery configured"
 }
 
 function Configure-Agent($agent) {
@@ -467,8 +539,14 @@ function Verify-Setup {
     Write-Host "  Skill files:" -ForegroundColor White
     $skillCount = (Get-ChildItem "$SkillDir\skills\*.md" -ErrorAction SilentlyContinue).Count
     $optionCount = (Get-ChildItem "$SkillDir\options\*.md" -ErrorAction SilentlyContinue).Count
+    $opencodeSkillCount = 0
+    $opencodeSkillsDir = Join-Path $SkillDir ".opencode\skills"
+    if (Test-Path $opencodeSkillsDir) {
+        $opencodeSkillCount = (Get-ChildItem "$opencodeSkillsDir\*\SKILL.md" -ErrorAction SilentlyContinue).Count
+    }
     Write-Host "  [+] $skillCount skills loaded" -ForegroundColor Green
     Write-Host "  [+] $optionCount options available" -ForegroundColor Green
+    Write-Host "  [+] $opencodeSkillCount OpenCode skills linked" -ForegroundColor Green
 
     Write-Host ""
     Write-Host "  Quick test commands:" -ForegroundColor White
@@ -538,6 +616,10 @@ function Main {
     }
 
     Clone-Or-Update
+
+    if ($Global:SelectedAgents -contains "opencode") {
+        Setup-OpenCodeSkills
+    }
 
     foreach ($agent in $Global:SelectedAgents) {
         Configure-Agent $agent
