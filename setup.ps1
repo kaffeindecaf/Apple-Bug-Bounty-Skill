@@ -370,7 +370,9 @@ function Clone-Or-Update {
 
 function Setup-OpenCodeSkills {
     Write-Step "Setting Up OpenCode Skill Discovery"
-    Write-Info "OpenCode discovers skills from .opencode/skills/<name>/SKILL.md"
+    Write-Info "OpenCode discovers skills from:"
+    Write-Info "  (global)  ~/.config/opencode/skills/<name>/SKILL.md"
+    Write-Info "  (project) <project>/.opencode/skills/<name>/SKILL.md"
     Write-Info "Creating OpenCode skill directory structure..."
 
     $skillsDir = Join-Path $SkillDir ".opencode\skills"
@@ -378,6 +380,9 @@ function Setup-OpenCodeSkills {
         Remove-Item -Recurse -Force $skillsDir
     }
     New-Item -ItemType Directory -Path $skillsDir -Force | Out-Null
+
+    $globalSkillsDir = Join-Path $env:USERPROFILE ".config\opencode\skills"
+    New-Item -ItemType Directory -Path $globalSkillsDir -Force | Out-Null
 
     $skillMap = @{
         "master-router"              = "SKILL.md"
@@ -399,13 +404,17 @@ function Setup-OpenCodeSkills {
     foreach ($name in $skillMap.Keys) {
         $src = Join-Path $SkillDir $skillMap[$name]
         $dstdir = Join-Path $skillsDir $name
+        $globalDstdir = Join-Path $globalSkillsDir $name
         New-Item -ItemType Directory -Path $dstdir -Force | Out-Null
+        New-Item -ItemType Directory -Path $globalDstdir -Force | Out-Null
 
         if (Test-Path $src) {
             try {
                 New-Item -ItemType SymbolicLink -Path (Join-Path $dstdir "SKILL.md") -Target $src -Force -ErrorAction Stop | Out-Null
+                New-Item -ItemType SymbolicLink -Path (Join-Path $globalDstdir "SKILL.md") -Target $src -Force -ErrorAction Stop | Out-Null
             } catch {
                 Copy-Item $src (Join-Path $dstdir "SKILL.md") -Force
+                Copy-Item $src (Join-Path $globalDstdir "SKILL.md") -Force
             }
             $count++
         } else {
@@ -414,6 +423,8 @@ function Setup-OpenCodeSkills {
     }
 
     Write-Ok "Created $count OpenCode skill links in $skillsDir"
+    Write-Ok "Created $count global OpenCode skill links in $globalSkillsDir"
+    Write-Info "Skills are now available globally in OpenCode (any project)."
 
     $targetJson = Join-Path $SkillDir "opencode.json"
     if (Test-Path $targetJson) {
@@ -459,8 +470,9 @@ function Configure-Agent($agent) {
             Write-Info "Run: codex --instructions $env:USERPROFILE\.codex\instructions.md"
         }
         "opencode" {
-            Write-Info "OpenCode auto-loads opencode.json from the project root."
-            Write-Info "cd $SkillDir; opencode to start."
+            Write-Info "OpenCode discovers skills from ~/.config/opencode/skills/<name>/SKILL.md"
+            Write-Info "Skills are symlinked globally - available in every project."
+            Write-Info "Project-local copies also live at $SkillDir\.opencode\skills\"
         }
         "windsurf" {
             Write-Info "Windsurf auto-ingests .windsurfrules from the workspace directory."
@@ -531,9 +543,15 @@ function Verify-Setup {
     if (Test-Path $opencodeSkillsDir) {
         $opencodeSkillCount = (Get-ChildItem "$opencodeSkillsDir\*\SKILL.md" -ErrorAction SilentlyContinue).Count
     }
+    $globalOpencodeSkillCount = 0
+    $globalOpencodeSkillsDir = Join-Path $env:USERPROFILE ".config\opencode\skills"
+    if (Test-Path $globalOpencodeSkillsDir) {
+        $globalOpencodeSkillCount = (Get-ChildItem "$globalOpencodeSkillsDir\*\SKILL.md" -ErrorAction SilentlyContinue).Count
+    }
     Write-Host "  [+] $skillCount skills loaded" -ForegroundColor Green
     Write-Host "  [+] $optionCount options available" -ForegroundColor Green
     Write-Host "  [+] $opencodeSkillCount OpenCode skills linked" -ForegroundColor Green
+    Write-Host "  [+] $globalOpencodeSkillCount global links in ~/.config/opencode/skills" -ForegroundColor Green
 
     Write-Host ""
     Write-Host "  Quick test commands:" -ForegroundColor White
@@ -542,7 +560,7 @@ function Verify-Setup {
             "claude"   { Write-Host "    claude `"Load ios-kernel-exploit skill`"" -ForegroundColor Cyan }
             "cursor"   { Write-Host "    cursor $SkillDir   (open workspace)" -ForegroundColor Cyan }
             "codex"    { Write-Host "    codex --instructions `"$env:USERPROFILE\.codex\instructions.md`"" -ForegroundColor Cyan }
-            "opencode" { Write-Host "    opencode                (cd `"$SkillDir`" first)" -ForegroundColor Cyan }
+            "opencode" { Write-Host "    opencode                (skills auto-discovered globally)" -ForegroundColor Cyan }
             "windsurf" { Write-Host "    windsurf $SkillDir  (open workspace)" -ForegroundColor Cyan }
             default    { Write-Host "    $agent config ready at $src" -ForegroundColor Cyan }
         }

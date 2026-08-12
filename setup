@@ -386,12 +386,16 @@ select_agents() {
 
 setup_opencode_skills() {
     log_step "Setting Up OpenCode Skill Discovery"
-    log_info "OpenCode discovers skills from .opencode/skills/<name>/SKILL.md"
-    log_info "Creating symlinks for project-local skill discovery..."
+    log_info "OpenCode discovers skills from:"
+    log_info "  (global)  ~/.config/opencode/skills/<name>/SKILL.md"
+    log_info "  (project) <project>/.opencode/skills/<name>/SKILL.md"
+    log_info "Creating symlinks for global + project-local skill discovery..."
 
     local skills_dir="$SKILL_DIR/.opencode/skills"
+    local global_skills_dir="$HOME/.config/opencode/skills"
     rm -rf "$skills_dir"
     mkdir -p "$skills_dir"
+    mkdir -p "$global_skills_dir"
 
     # Map of skill name -> relative path to the actual skill file
     declare -A SKILL_MAP
@@ -413,10 +417,12 @@ setup_opencode_skills() {
     for name in "${!SKILL_MAP[@]}"; do
         local src="${SKILL_MAP[$name]}"
         local dstdir="$skills_dir/$name"
-        mkdir -p "$dstdir"
+        local global_dstdir="$global_skills_dir/$name"
+        mkdir -p "$dstdir" "$global_dstdir"
 
         if [ -f "$src" ]; then
             ln -sf "$src" "$dstdir/SKILL.md"
+            ln -sf "$src" "$global_dstdir/SKILL.md"
             count=$((count + 1))
             draw_progress_bar "$count" "$total" "Linking skills"
         else
@@ -426,6 +432,8 @@ setup_opencode_skills() {
 
     echo ""
     log_ok "Created $count OpenCode skill symlinks in $skills_dir"
+    log_ok "Created $count OpenCode skill symlinks in $global_skills_dir"
+    log_info "Skills are now available globally in OpenCode (any project)."
 
     # Back up existing opencode.json at the target if it exists
     local target_json="$SKILL_DIR/opencode.json"
@@ -545,9 +553,9 @@ configure_agent() {
             ;;
 
         opencode)
-            log_info "OpenCode discovers skills from .opencode/skills/<name>/SKILL.md"
-            log_info "Skills are symlinked from the project's skills/ directory"
-            log_info "cd $SKILL_DIR && opencode to start."
+            log_info "OpenCode discovers skills from ~/.config/opencode/skills/<name>/SKILL.md"
+            log_info "Skills are symlinked globally — available in every project."
+            log_info "Project-local copies also live at $SKILL_DIR/.opencode/skills/"
             ;;
 
         windsurf)
@@ -623,9 +631,14 @@ verify_setup() {
     if [ -d "$SKILL_DIR/.opencode/skills" ]; then
         opencode_skill_count=$(find "$SKILL_DIR/.opencode/skills" -name "SKILL.md" -type l 2>/dev/null | wc -l | tr -d ' ')
     fi
+    local global_opencode_skill_count=0
+    if [ -d "$HOME/.config/opencode/skills" ]; then
+        global_opencode_skill_count=$(find "$HOME/.config/opencode/skills" -name "SKILL.md" -type l 2>/dev/null | wc -l | tr -d ' ')
+    fi
     printf "  ${GREEN}\xE2\x9C\x93${NC} %-25s %d skills loaded\n" "Skill modules:" "$skill_count"
     printf "  ${GREEN}\xE2\x9C\x93${NC} %-25s %d options available\n" "Output options:" "$option_count"
     printf "  ${GREEN}\xE2\x9C\x93${NC} %-25s %d OpenCode skills linked\n" "OpenCode discovery:" "$opencode_skill_count"
+    printf "  ${GREEN}\xE2\x9C\x93${NC} %-25s %d global links in ~/.config/opencode/skills\n" "OpenCode global:" "$global_opencode_skill_count"
 
     echo ""
     echo -e "  ${BOLD}Quick test commands:${NC}"
@@ -634,7 +647,7 @@ verify_setup() {
             claude)   echo -e "    ${CYAN}claude${NC} \"Load ios-kernel-exploit skill\"" ;;
             cursor)   echo -e "    ${CYAN}cursor${NC} $SKILL_DIR   (open workspace)" ;;
             codex)    echo -e "    ${CYAN}codex${NC} --instructions $HOME/.codex/instructions.md" ;;
-            opencode) echo -e "    ${CYAN}opencode${NC} $SKILL_DIR                        (skills auto-discovered)" ;;
+            opencode) echo -e "    ${CYAN}opencode${NC}                                 (skills auto-discovered globally)" ;;
             windsurf) echo -e "    ${CYAN}windsurf${NC} $SKILL_DIR    (open workspace)" ;;
             *)        echo -e "    ${CYAN}$agent${NC}: config ready at $SKILL_DIR/$config" ;;
         esac

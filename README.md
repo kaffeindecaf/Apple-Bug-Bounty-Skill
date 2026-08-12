@@ -44,7 +44,7 @@ Open your agent and start using the skills. No special import needed — agents 
 # Claude Code (auto-discovers .claude/instructions.md)
 claude "How do I escape the iOS sandbox on version 26?"
 
-# OpenCode (auto-discovers .opencode/skills/<name>/SKILL.md)
+# OpenCode (skills are symlinked into ~/.config/opencode/skills — available in every project)
 opencode "Load ios-kernel-exploit skill and analyze this kernel panic"
 
 # Cursor / Windsurf (open this directory as a workspace)
@@ -83,15 +83,31 @@ codex                           # Auto-discovers .codex.md
 
 #### OpenCode
 ```bash
-# The setup script creates .opencode/skills/ with symlinks to all skill files
-# OpenCode auto-discovers skills from this directory
-opencode                        # Skills auto-discovered from .opencode/skills/
+# The setup script creates symlinks in ~/.config/opencode/skills/ (global)
+# and .opencode/skills/ (project-local) to all skill files
+opencode                        # Skills auto-discovered in any project
 ```
 
 #### Gemini / Qwen / Kimi
 Import the config file from the project root into the agent's plugin settings.
 
 </details>
+
+### Uninstall
+
+**Linux / macOS:**
+```bash
+./uninstall
+```
+
+**Windows (PowerShell):**
+```powershell
+.\uninstall.ps1
+```
+
+The uninstaller removes the OpenCode global skill links, agent config files
+created by the setup script, and (with confirmation) the installed repository
+at `~/.apple-bug-bounty-skill`.
 
 ---
 
@@ -206,7 +222,7 @@ From `docs/researchdeepseek.md` — 31 findings from a systematic audit:
 | Claude Code | `.claude/instructions.md` | Yes |
 | Cursor | `.cursorrules` | Yes |
 | OpenAI Codex | `.codex.md` | Yes |
-| OpenCode | `opencode.json` + `.opencode/skills/` | Yes (skill dirs auto-discovered) |
+| OpenCode | `opencode.json` + skills symlinked into `~/.config/opencode/skills/` | Yes (global, any project) |
 | Windsurf | `.windsurfrules` | Yes |
 | GitHub Copilot | `.github/copilot-instructions.md` | Yes |
 | Google Gemini | `GEMINI.md` | Manual import |
