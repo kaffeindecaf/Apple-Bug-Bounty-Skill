@@ -16,19 +16,6 @@ $RepoUrl  = "https://github.com/kaffeindecaf/Apple-Bug-Bounty-Skill.git"
 # ─────────────────────────────────────────────────
 
 function Show-Banner {
-    Write-Host @"
-                    / V\
-                  / `  /
-                 <<   |
-                 /    |
-               /      |
-             /        |
-           /    \  \ /
-          (      ) | |
-  ________|   _/_  | |
-<__________\______)\__)
-"@ -ForegroundColor Cyan
-
     Write-Host "          Apple-Bug-Bounty-Skill Setup" -ForegroundColor White
     Write-Host "    10 skills · 8 options · 9 agents · 0 fluff" -ForegroundColor Cyan
     Write-Host ""

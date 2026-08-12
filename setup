@@ -25,19 +25,6 @@ PROGRESS_WIDTH=30
 # ─────────────────────────────────────────────────
 
 show_banner() {
-    echo -e "${CYAN}"
-    cat << 'WOLF'
-                    / V\
-                  / `  /
-                 <<   |
-                 /    |
-               /      |
-             /        |
-           /    \  \ /
-          (      ) | |
-  ________|   _/_  | |
-<__________\______)\__)
-WOLF
     echo -e "${BOLD}          Apple-Bug-Bounty-Skill Setup${NC}"
     echo -e "${CYAN}    10 skills · 8 options · 9 agents · 0 fluff${NC}"
     echo ""
