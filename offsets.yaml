@@ -704,15 +704,28 @@ constants:
     cdevsw_major: "0x11"
 
   checkm8:
+    # Verified against usbliter8-arctic offset profiles (iPhone12,3 / d421ap).
+    # b2 values confirmed by beta-to-beta migration ground truth; b3 values
+    # confirmed by the verified working profile.
     ios_27_0b2:
+      ibss_image4_validate: "0x23DB0"
+      ibss_boot_args_ptr: "0x2AFBC"
+      ibss_boot_args_string: "0xD3850"
+      txm_queryModule0: "0x39CB0"
+      txm_queryModule1: "0x39E18"
+      txm_queryModule2: "0x39FAC"
+      txm_constraints_sig: "0x3F564"
+      txm_allowedBeforeSecure: "0x2BCB4"
+      mobileactivationd_should_hactivate: "0x2EBB14"
+    ios_27_0b3:
       ibss_image4_validate: "0x23EFC"
       ibss_boot_args_ptr: "0x2B0F4"
       ibss_boot_args_string: "0xD3960"
-      txm_queryModule0: "0x39ca8"
-      txm_queryModule1: "0x39e10"
-      txm_queryModule2: "0x39fa4"
-      txm_constraints_sig: "0x3f510"
-      txm_allowedBeforeSecure: "0x2bcb4"
+      txm_queryModule0: "0x39CB0"
+      txm_queryModule1: "0x39E18"
+      txm_queryModule2: "0x39FA4"
+      txm_constraints_sig: "0x3F510"
+      txm_allowedBeforeSecure: "0x2BCB4"
       mobileactivationd_should_hactivate: "0x2EBB14"
 
   webkit:
