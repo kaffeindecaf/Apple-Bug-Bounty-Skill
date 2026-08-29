@@ -110,6 +110,7 @@ When a user asks a question, route to the correct skill(s):
 | PUAF, PhysPuppet, Smith, Landa, physical use-after-free, CVE-2023-23536, CVE-2023-32434, CVE-2023-41974, kfd, dangling PTE, page table exploitation, perfmon bootstrap | `skills/ios-puaf-exploit.md` | **YES** |
 | CoreTrust, code signing bypass, perma-sign, fastPathSign, CMS signature, cdhash, provisioning profile, AMFI userspace bypass, installd bypass, TrollStore internals | `skills/ios-coretrust-bypass.md` | **YES** |
 | research, methodology, how to find bugs, how to audit, how to reverse, how to discover offsets, learning path, getting started, beginner, tutorial | `skills/ios-research-methodology.md` | **YES** |
+| audio, ALAC, AudioToolbox, CoreAudio, CoreMedia, font parsing, FontParser, PDF parsing, media file, buffer overflow in framework, media framework fuzz, libxml2, ICU, mDNSResponder, Quick Look, ModelIO, dyld shared cache extract, framework CVE | `skills/ios-media-frameworks.md` | **YES** |
 
 ### Dynamic Cross-Reference Rules
 
@@ -177,6 +178,7 @@ If the user mentions ANY of the following, research it first:
 | 8 | `skills/ios-puaf-exploit.md` | ~8K | Active |
 | 9 | `skills/ios-coretrust-bypass.md` | ~8K | Active |
 | 10 | `skills/ios-research-methodology.md` | ~8K | Active |
+| 11 | `skills/ios-media-frameworks.md` | ~9K | Active |
 
 ---
 
