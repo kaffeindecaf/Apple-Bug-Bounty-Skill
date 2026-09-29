@@ -1,8 +1,9 @@
 # Apple-Bug-Bounty-Skill
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![validate](https://github.com/kaffeindecaf/Apple-Bug-Bounty-Skill/actions/workflows/validate.yml/badge.svg)](https://github.com/kaffeindecaf/Apple-Bug-Bounty-Skill/actions/workflows/validate.yml)
 
-A knowledge base for iOS exploit development, packaged as markdown skills that AI coding agents load automatically. Ten modules: kernel exploitation, sandbox escapes, the bootchain, WebKit, code injection, CoreTrust, and the research methodology that ties it together.
+A knowledge base for iOS exploit development, packaged as markdown skills that AI coding agents load automatically. Seventeen modules: kernel exploitation, sandbox escapes, the bootchain, WebKit, code injection, CoreTrust, variant hunting, bounty filing, firmware offsets, and the research methodology that ties it together.
 
 It grew out of a full audit of the W0lfSword exploit chain and ten reference repos, done in August 2026. The 31 findings from that audit live in `docs/researchdeepseek.md`; the fixes landed in the projects themselves. What's left here is what an agent actually needs to answer iOS exploit questions without making up offsets.
 
@@ -145,36 +146,69 @@ Options are processed before skill routing. `--bug` hands off to `--fix` once th
 
 ## Skills
 
-Ten modules, each with YAML frontmatter, trigger words, cross-reference rules, and a `research_first` directive. The master `SKILL.md` routes questions and makes sure the agent actually reads external sources before answering.
+Seventeen modules, each with YAML frontmatter, trigger words, cross-reference rules, and a `research_first` directive. The master `SKILL.md` routes questions and makes sure the agent actually reads external sources before answering.
 
 | skill | tokens | covers |
 |-------|--------|--------|
-| `ios-kernel-exploit` | 8K | PAC, SMR, IOSurface OOB, socket spray, Checkm8 offsets, KASLR |
-| `ios-sandbox-escape` | 8K | MAC framework, extension patching, SSV, vnode swap, TCC, MIG bypass |
-| `ios-security-pentesting` | 9K | Frida, AMFI, CoreTrust, bug bounty, SSL pinning, jailbreak detection |
-| `ios-misc-tooling` | 11K | Theos, ldid, deploy, kernelcache, libimobiledevice, device management |
-| `ios-bootchain-exploit` | 10K | Checkm8, SecureROM, IMG4, PWN DFU, trust cache, DeviceTree, hacktivation |
-| `ios-code-injection` | 9K | ROP chains, dylib injection, shellcode, PAC forging, remote threads |
-| `ios-webkit-exploit` | 9K | JSC type confusion, JIT bypass, OffscreenCanvas dlopen, GPU IPC escape |
-| `ios-puaf-exploit` | 8K | PhysPuppet, Smith, Landa, kfd library, page table exploitation |
-| `ios-coretrust-bypass` | 8K | CoreTrust, fastPathSign, CMS signature, perma-sign, TrollStore |
-| `ios-research-methodology` | 8K | audit protocol, 10 bug classes, 5-stage learning path, tool references |
+| `ios-kernel-exploit` | ~4.2K | PAC, SMR, IOSurface OOB, socket spray, Checkm8 offsets, KASLR |
+| `ios-sandbox-escape` | ~4.1K | MAC framework, extension patching, SSV, vnode swap, TCC, MIG bypass |
+| `ios-security-pentesting` | ~3.5K | Frida, AMFI, CoreTrust, bug bounty, SSL pinning, jailbreak detection |
+| `ios-misc-tooling` | ~3.3K | Theos, ldid, deploy, kernelcache, libimobiledevice, device management |
+| `ios-bootchain-exploit` | ~3.0K | Checkm8, SecureROM, IMG4, PWN DFU, trust cache, DeviceTree, hacktivation |
+| `ios-code-injection` | ~3.6K | ROP chains, dylib injection, shellcode, PAC forging, remote threads |
+| `ios-webkit-exploit` | ~2.7K | JSC type confusion, JIT bypass, OffscreenCanvas dlopen, GPU IPC escape |
+| `ios-puaf-exploit` | ~2.5K | PhysPuppet, Smith, Landa, kfd library, page table exploitation |
+| `ios-coretrust-bypass` | ~2.7K | CoreTrust, fastPathSign, CMS signature, perma-sign, TrollStore |
+| `ios-research-methodology` | ~3.4K | audit protocol, 10 bug classes, 5-stage learning path, tool references |
+| `ios-media-frameworks` | ~1.3K | AudioToolbox, CoreText, PDFKit, libxml2, ICU, parser fuzzing |
+| `apple-bounty-submission` | ~1.6K | report portal field map, paste blocks, voice rules, payout framing |
+| `ios-variant-hunting` | ~2.0K | sibling hunting, advisory→fix-commit mapping, branch sweep, kext diffs |
+| `ios-poc-lab` | ~0.7K | host-side PoC harnesses, ASAN verdicts, falsifying a finding |
+| `ios-device-usb-tooling` | ~1.9K | pairing, syslog capture, USB SSH, crash and panic pulls |
+| `ios-firmware-offset-research` | ~1.6K | IPSW extraction, offset migration, XPF resolution, kcwatch |
+| `apple-mte-research` | ~1.6K | MIE/EMTE, A19 tag storage, XZone, MTE bypass classes |
 
-Kernel struct offsets live in one file, `offsets.yaml`. Skills reference it instead of hardcoding values, so a new iOS version means updating one file, not ten skills.
+The whole knowledge base is ~44K tokens, but an agent loads one module at a time, so a typical question costs 2-4K.
+
+Kernel struct offsets live in one file, `offsets.yaml`. Skills reference it instead of hardcoding values, so a new iOS version means updating one file, not seventeen skills.
+
+### Supporting references
+
+Some skills carry long-form recipes beside them. The skill body stays skimmable; the reference holds the exact commands, traps and worked numbers. Load it when the question is "how exactly do I".
+
+| skill | references |
+|-------|-----------|
+| `apple-bounty-submission` | portal field map and paste-block pattern |
+| `ios-variant-hunting` | advisory→fix-commit trap list, branch version sweep, build-pair diff corpus |
+| `ios-device-usb-tooling` | USB enumeration triage, device panic triage, `usb_probe.sh` |
+| `ios-firmware-offset-research` | IPSW extraction, struct offsets from a kernelcache, ranged fetch, host-side XPF diff, binary diffing, XPF finder authoring, kcwatch pipeline, fileset KC kext xrefs |
+| `apple-mte-research` | MTE key facts, 2026 source sweep and repo conventions |
+
+### Validate
+
+```bash
+python3 scripts/validate_skills.py     # frontmatter, cross-references, dead links, leak guard
+```
+
+Run it after any edit. CI runs the same script on every push and pull request.
 
 ### How the skills fit together
 
 The skills cross-reference each other. When a conversation drifts into a neighboring topic, the active skill tells the agent to load the one that covers it:
 
 ```
-ios-kernel-exploit ←→ ios-sandbox-escape     (sandbox escape needs kernel R/W)
-ios-kernel-exploit ←→ ios-bootchain-exploit   (Checkm8 gives kernel access)
-ios-webkit-exploit →  ios-kernel-exploit      (WebKit chain leads to kernel)
-ios-puaf-exploit   ←→ ios-kernel-exploit      (alternative K-R/W primitive)
-ios-code-injection ←→ ios-bootchain-exploit   (ROP needs trust cache/AMFI)
-ios-coretrust      ←→ ios-security-pentesting (CoreTrust is a security domain)
-ios-misc-tooling   ←→ ALL                     (tooling touches everything)
-ios-research       ←→ ALL                     (methodology is universal)
+ios-kernel-exploit    ←→ ios-sandbox-escape      (sandbox escape needs kernel R/W)
+ios-kernel-exploit    ←→ ios-bootchain-exploit   (Checkm8 gives kernel access)
+ios-webkit-exploit    →  ios-kernel-exploit      (WebKit chain leads to kernel)
+ios-webkit-exploit    ←→ ios-variant-hunting     (most productive sibling-hunt surface)
+ios-puaf-exploit      ←→ ios-kernel-exploit      (alternative K-R/W primitive)
+ios-code-injection    ←→ ios-bootchain-exploit   (ROP needs trust cache/AMFI)
+ios-coretrust         ←→ ios-security-pentesting (CoreTrust is a security domain)
+ios-variant-hunting   ←→ apple-bounty-submission (a confirmed variant still needs a filing)
+ios-media-frameworks  ←→ ios-poc-lab             (Apple open-source parsers are host-testable)
+ios-firmware-offset-research ←→ ios-bootchain-exploit (offsets are consumed by the patches)
+ios-misc-tooling      ←→ ALL                     (tooling touches everything)
+ios-research          ←→ ALL                     (methodology is universal)
 ```
 
 ## Reference projects
@@ -240,7 +274,22 @@ git clone https://github.com/author/new-exploit.git
 
 If you'd rather keep it linked to upstream, `git submodule add` works too.
 
-**New skill:** create a markdown file in `skills/` with YAML frontmatter (`name` and `description` are required for OpenCode compatibility), trigger words, cross-reference rules, and `research_first: true`. Then register it in `SKILL.md`, add it to the agent config files, and re-run `./setup` to regenerate the OpenCode symlinks.
+**New skill:** create a markdown file in `skills/` named after the skill (`skills/<skill-name>.md`) with YAML frontmatter: `name` (must match the filename), `description` (starts with `Use `), `version`, `agent_compatibility`, `token_budget`, `covers`, `platforms`, `triggers`, `related_skills`, `research_first: true`, and optionally `learns_from`, `cross_reference_rules`, `references`.
+
+Long-form recipes go in `skills/references/<skill-name>/<file>.md` and must be declared in the skill's `references:` list. Keep the skill body skimmable — if a section is over ~80 lines of commands and traps, it belongs in a reference.
+
+Then:
+
+```bash
+# 1. register it in SKILL.md (routing table + inventory), README (skills table), and the agent config files
+# 2. add the name to the SKILL_MAP in setup and setup.ps1 so OpenCode symlinks it
+# 3. validate everything, then re-run ./setup
+python3 scripts/validate_skills.py
+./setup
+```
+
+The validator is the gate: it fails on missing frontmatter keys, dead cross-references, undeclared reference files, router/README drift, and (because this repo is public) absolute local paths, device UDIDs, API keys, and unreviewed case ids.
+
 
 ## Credits
 

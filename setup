@@ -26,7 +26,7 @@ PROGRESS_WIDTH=30
 
 show_banner() {
     echo -e "${BOLD}          Apple-Bug-Bounty-Skill Setup${NC}"
-    echo -e "${CYAN}    10 skills · 8 options · 9 agents · 0 fluff${NC}"
+    echo -e "${CYAN}    17 skills · 8 options · 9 agents · 0 fluff${NC}"
     echo ""
 }
 
@@ -410,6 +410,13 @@ setup_opencode_skills() {
     SKILL_MAP["ios-puaf-exploit"]="$SKILL_DIR/skills/ios-puaf-exploit.md"
     SKILL_MAP["ios-coretrust-bypass"]="$SKILL_DIR/skills/ios-coretrust-bypass.md"
     SKILL_MAP["ios-research-methodology"]="$SKILL_DIR/skills/ios-research-methodology.md"
+    SKILL_MAP["ios-media-frameworks"]="$SKILL_DIR/skills/ios-media-frameworks.md"
+    SKILL_MAP["apple-bounty-submission"]="$SKILL_DIR/skills/apple-bounty-submission.md"
+    SKILL_MAP["ios-variant-hunting"]="$SKILL_DIR/skills/ios-variant-hunting.md"
+    SKILL_MAP["ios-poc-lab"]="$SKILL_DIR/skills/ios-poc-lab.md"
+    SKILL_MAP["ios-device-usb-tooling"]="$SKILL_DIR/skills/ios-device-usb-tooling.md"
+    SKILL_MAP["ios-firmware-offset-research"]="$SKILL_DIR/skills/ios-firmware-offset-research.md"
+    SKILL_MAP["apple-mte-research"]="$SKILL_DIR/skills/apple-mte-research.md"
 
     local total=${#SKILL_MAP[@]}
     local count=0
@@ -423,6 +430,11 @@ setup_opencode_skills() {
         if [ -f "$src" ]; then
             ln -sf "$src" "$dstdir/SKILL.md"
             ln -sf "$src" "$global_dstdir/SKILL.md"
+            # supporting references travel with the skill so relative links resolve
+            if [ -d "$SKILL_DIR/skills/references/$name" ]; then
+                ln -sfn "$SKILL_DIR/skills/references/$name" "$dstdir/references"
+                ln -sfn "$SKILL_DIR/skills/references/$name" "$global_dstdir/references"
+            fi
             count=$((count + 1))
             draw_progress_bar "$count" "$total" "Linking skills"
         else
@@ -490,6 +502,13 @@ clone_or_update_repo() {
         "skills/ios-puaf-exploit.md"
         "skills/ios-coretrust-bypass.md"
         "skills/ios-research-methodology.md"
+        "skills/ios-media-frameworks.md"
+        "skills/apple-bounty-submission.md"
+        "skills/ios-variant-hunting.md"
+        "skills/ios-poc-lab.md"
+        "skills/ios-device-usb-tooling.md"
+        "skills/ios-firmware-offset-research.md"
+        "skills/apple-mte-research.md"
     )
 
     local total_verify=${#required[@]}
@@ -624,7 +643,7 @@ verify_setup() {
     echo ""
     echo -e "  ${BOLD}Skill files:${NC}"
     local skill_count
-    skill_count=$(find "$SKILL_DIR/skills" -name "*.md" -type f 2>/dev/null | wc -l | tr -d ' ')
+    skill_count=$(find "$SKILL_DIR/skills" -maxdepth 1 -name "*.md" -type f 2>/dev/null | wc -l | tr -d ' ')
     local option_count
     option_count=$(find "$SKILL_DIR/options" -name "*.md" -type f 2>/dev/null | wc -l | tr -d ' ')
     local opencode_skill_count=0

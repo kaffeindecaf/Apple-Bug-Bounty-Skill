@@ -34,10 +34,14 @@ related_skills:
   - ios-bootchain-exploit
   - ios-code-injection
   - ios-misc-tooling
+  - ios-variant-hunting
+  - ios-poc-lab
 cross_reference_rules:
   - If a specific bug class is found → load the domain skill (kernel, sandbox, bootchain, etc.)
   - If tooling is needed for the research → load ios-misc-tooling
   - If bug bounty report writing → load ios-security-pentesting
+  - If mining a published fix for surviving siblings → load ios-variant-hunting
+  - If a finding can be tested host-side without a device → load ios-poc-lab
 research_first: true
 ---
 

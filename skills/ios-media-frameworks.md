@@ -27,9 +27,15 @@ triggers:
   - dyld shared cache extract
 related_skills:
   - ios-misc-tooling
+  - ios-poc-lab
+  - ios-variant-hunting
   - ios-research-methodology
   - ios-webkit-exploit
   - ios-sandbox-escape
+cross_reference_rules:
+  - If the parser can be built and fuzzed on a host → load ios-poc-lab
+  - If the bug class matches a published advisory → load ios-variant-hunting
+research_first: true
 ---
 
 # iOS Media & Framework Exploit Research

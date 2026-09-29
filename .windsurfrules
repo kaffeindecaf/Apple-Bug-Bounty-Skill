@@ -1,7 +1,7 @@
 # Apple-Bug-Bounty-Skill — Windsurf Rules
 
 ## Workspace Configuration
-This workspace contains a curated iOS exploit development knowledge base with 10 specialized skill modules, 8 output options, and 10 reference projects.
+This workspace contains a curated iOS exploit development knowledge base with 17 specialized skill modules, 8 output options, and 10 reference projects.
 
 ## Options Pipeline (Process Before Routing)
 
@@ -37,3 +37,10 @@ Load `SKILL.md` first — it enforces the research-first protocol and dynamic sk
 | PUAF, PhysPuppet, Smith, Landa, kfd, page table | `@skills/ios-puaf-exploit.md` |
 | CoreTrust, code signing, perma-sign, fastPathSign, CMS | `@skills/ios-coretrust-bypass.md` |
 | research, methodology, audit, learning path, getting started | `@skills/ios-research-methodology.md` |
+| audio, ALAC, AudioToolbox, CoreAudio, CoreMedia, font parsing, FontParser, PDF parsing, libxml2, ICU, mDNSResponder, framework CVE | `@skills/ios-media-frameworks.md` |
+| bounty report, report portal, file a report, submission text, Lockdown Mode bonus, credit field | `@skills/apple-bounty-submission.md` |
+| variant hunt, sibling bug, incomplete fix, advisory mapping, fix commit, branch sweep, affected versions, duplicate | `@skills/ios-variant-hunting.md` |
+| PoC lab, host-side, ASAN harness, reproduce without a device, apple-oss-distributions, falsify a finding | `@skills/ios-poc-lab.md` |
+| USB, pairing, idevicepair, idevicesyslog, iproxy, usbmuxd, crash pull, device panic, afcclient | `@skills/ios-device-usb-tooling.md` |
+| IPSW, im4p, iBSS, iBEC, TXM, offset migration, XPF, kcwatch, kernelcache offset, usbliter8 profile | `@skills/ios-firmware-offset-research.md` |
+| MTE, MIE, memory integrity enforcement, memory tagging, EMTE, A19, t8150, XZone, tag storage | `@skills/apple-mte-research.md` |

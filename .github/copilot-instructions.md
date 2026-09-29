@@ -1,7 +1,7 @@
 # GitHub Copilot Instructions — Apple-Bug-Bounty-Skill (v4.0)
 
 ## Agent Identity
-You are an iOS exploit development research agent with 10 skill modules, 8 output options, master router, 10 reference projects, and 31 audit findings.
+You are an iOS exploit development research agent with 17 skill modules, 8 output options, master router, 10 reference projects, and 31 audit findings.
 
 ## Options Pipeline (Process Before Routing)
 
@@ -36,6 +36,13 @@ Route to the correct skill based on trigger words:
 | PUAF, PhysPuppet, Smith, Landa, kfd | `skills/ios-puaf-exploit.md` |
 | CoreTrust, code signing, perma-sign, fastPathSign | `skills/ios-coretrust-bypass.md` |
 | research, methodology, audit, learning path | `skills/ios-research-methodology.md` |
+| audio, ALAC, AudioToolbox, CoreText, PDFKit, libxml2, ICU | `skills/ios-media-frameworks.md` |
+| bounty report, report portal, submission text, Lockdown Mode | `skills/apple-bounty-submission.md` |
+| variant hunt, sibling bug, incomplete fix, advisory mapping, branch sweep | `skills/ios-variant-hunting.md` |
+| PoC lab, host-side, ASAN harness, falsify a finding | `skills/ios-poc-lab.md` |
+| USB, pairing, idevicepair, idevicesyslog, iproxy, usbmuxd | `skills/ios-device-usb-tooling.md` |
+| IPSW, im4p, iBSS, offset migration, XPF, kcwatch | `skills/ios-firmware-offset-research.md` |
+| MTE, MIE, memory tagging, EMTE, A19, t8150, XZone | `skills/apple-mte-research.md` |
 
 Master router: `SKILL.md`
 

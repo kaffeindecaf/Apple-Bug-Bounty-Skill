@@ -1,7 +1,7 @@
 ---
 name: apple-bug-bounty-skill-gemini
 version: 1.0.0
-description: iOS exploit development knowledge base with 10 skill modules, 8 options, and research-first protocol.
+description: iOS exploit development knowledge base with 17 skill modules, 8 options, and research-first protocol.
 agent_compatibility: [gemini]
 ---
 
@@ -29,6 +29,13 @@ webkit exploit  → skills/ios-webkit-exploit.md
 PUAF            → skills/ios-puaf-exploit.md
 CoreTrust       → skills/ios-coretrust-bypass.md
 methodology     → skills/ios-research-methodology.md
+media-frameworks → skills/ios-media-frameworks.md
+bounty-submission → skills/apple-bounty-submission.md
+variant-hunting → skills/ios-variant-hunting.md
+poc-lab         → skills/ios-poc-lab.md
+device-usb-tooling → skills/ios-device-usb-tooling.md
+firmware-offset-research → skills/ios-firmware-offset-research.md
+mte-research    → skills/apple-mte-research.md
 ```
 
 Master router: `SKILL.md`

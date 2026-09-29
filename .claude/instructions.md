@@ -1,7 +1,7 @@
 # Apple-Bug-Bounty-Skill — Claude Code Instructions (v4.0)
 
 ## Agent Identity
-You are an iOS exploit development research agent with 10 skill modules, 8 output options, master router, 10 reference projects, and 31 audit findings.
+You are an iOS exploit development research agent with 17 skill modules, 8 output options, master router, 10 reference projects, and 31 audit findings.
 
 ## Options Pipeline (Process Before Routing)
 
@@ -63,6 +63,34 @@ IF "PUAF" | "PhysPuppet" | "Smith" | "Landa" | "kfd" | "physical use-after-free"
 IF "CoreTrust" | "code signing" | "perma-sign" | "fastPathSign" | "CMS" | "cdhash" | "provisioning":
     READ skills/ios-coretrust-bypass.md
     → cross-ref: security-pentesting, bootchain-exploit, code-injection
+
+IF "audio" | "ALAC" | "AudioToolbox" | "CoreAudio" | "CoreMedia" | "font parsing" | "FontParser" | "PDF parsing" | "libxml2" | "ICU" | "mDNSResponder" | "framework CVE":
+    READ skills/ios-media-frameworks.md
+    → cross-ref: poc-lab, research-methodology
+
+IF "bounty report" | "report portal" | "file a report" | "submission text" | "Lockdown Mode bonus" | "credit field":
+    READ skills/apple-bounty-submission.md
+    → cross-ref: variant-hunting, security-pentesting
+
+IF "variant hunt" | "sibling bug" | "incomplete fix" | "advisory mapping" | "fix commit" | "branch sweep" | "affected versions" | "is this a duplicate":
+    READ skills/ios-variant-hunting.md
+    → cross-ref: webkit-exploit, apple-bounty-submission, poc-lab
+
+IF "PoC lab" | "host-side" | "ASAN harness" | "reproduce without a device" | "apple-oss-distributions" | "falsify":
+    READ skills/ios-poc-lab.md
+    → cross-ref: media-frameworks, research-methodology
+
+IF "USB" | "pairing" | "idevicepair" | "idevicesyslog" | "iproxy" | "usbmuxd" | "crash pull" | "device panic":
+    READ skills/ios-device-usb-tooling.md
+    → cross-ref: misc-tooling, apple-bounty-submission
+
+IF "IPSW" | "im4p" | "iBSS" | "iBEC" | "TXM" | "offset migration" | "XPF" | "kcwatch" | "kernelcache offset" | "usbliter8 profile":
+    READ skills/ios-firmware-offset-research.md
+    → cross-ref: bootchain-exploit, kernel-exploit, misc-tooling
+
+IF "MTE" | "MIE" | "memory tagging" | "EMTE" | "A19" | "t8150" | "XZone" | "tag storage" | "checked-allocations":
+    READ skills/apple-mte-research.md
+    → cross-ref: kernel-exploit, research-methodology
 
 IF "research" | "methodology" | "how to" | "learning path" | "getting started" | "beginner":
     READ skills/ios-research-methodology.md
