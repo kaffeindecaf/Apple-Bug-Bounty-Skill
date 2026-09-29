@@ -8,8 +8,22 @@ param()
 $ErrorActionPreference = "Stop"
 $ProgressPreference = "SilentlyContinue"
 
-$SkillDir = "$env:USERPROFILE\.apple-bug-bounty-skill"
+$SkillDir = Join-Path $env:USERPROFILE ".apple-bug-bounty-skill"
 $RepoUrl  = "https://github.com/kaffeindecaf/Apple-Bug-Bounty-Skill.git"
+
+# The vendored projects/ trees track large binaries with git-lfs, and a plain
+# clone runs the smudge filter wherever git-lfs is configured. That fails with
+# "Clone succeeded, but checkout failed" (exit 128) because those LFS objects
+# are not fetchable here, and the toolkit is text-only anyway. Clearing
+# filter.lfs.process is what stops the filter from being invoked at all;
+# required=false keeps any other filter from hard-failing the install.
+$LfsOff = @(
+    "-c", "filter.lfs.smudge=",
+    "-c", "filter.lfs.clean=",
+    "-c", "filter.lfs.process=",
+    "-c", "filter.lfs.required=false"
+)
+$env:GIT_LFS_SKIP_SMUDGE = "1"
 
 # ─────────────────────────────────────────────────
 # WOLF BANNER
@@ -41,14 +55,29 @@ function Test-Command($cmd) {
 
 function Detect-OS {
     Write-Step "Detecting System"
-    $os = Get-CimInstance Win32_OperatingSystem
-    Write-Info "OS: $($os.Caption) ($($os.OSArchitecture))"
-    Write-Info "PowerShell: $($PSVersionTable.PSVersion)"
 
-    if (-not ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
-        Write-Warn "Not running as Administrator. Some features may be limited."
-        Write-Info "Re-run as Administrator if you encounter permission errors:"
-        Write-Info "  Right-click PowerShell → Run as Administrator"
+    # $IsWindows only exists on PowerShell 6+; $env:OS covers Windows PowerShell 5.1.
+    $onWindows = $IsWindows -or ($env:OS -eq "Windows_NT")
+
+    if ($onWindows) {
+        try {
+            $os = Get-CimInstance Win32_OperatingSystem
+            Write-Info "OS: $($os.Caption) ($($os.OSArchitecture))"
+        } catch {
+            Write-Info "OS: Windows (WMI unavailable)"
+        }
+        Write-Info "PowerShell: $($PSVersionTable.PSVersion)"
+
+        if (-not ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
+            Write-Warn "Not running as Administrator. Some features may be limited."
+            Write-Info "Re-run as Administrator if you encounter permission errors:"
+            Write-Info "  Right-click PowerShell → Run as Administrator"
+        }
+    } else {
+        $ri = [System.Runtime.InteropServices.RuntimeInformation]
+        Write-Info "OS: $($ri::OSDescription) ($($ri::OSArchitecture))"
+        Write-Info "PowerShell: $($PSVersionTable.PSVersion) (cross-platform mode)"
+        Write-Info "Note: this script targets Windows; symlink setup is validated on Linux/macOS too."
     }
 }
 
@@ -123,7 +152,7 @@ function Detect-Agents {
         $Global:Agents += "claude"
         $Global:AgentNames["claude"] = "Claude Code"
         $Global:AgentConfigs["claude"] = ".claude/instructions.md"
-        $Global:AgentPaths["claude"] = "$env:USERPROFILE\.claude"
+        $Global:AgentPaths["claude"] = Join-Path $env:USERPROFILE ".claude"
         $Global:AgentDetect["claude"] = "cli at: $(Get-Command claude | Select-Object -ExpandProperty Source)"
         Write-Ok "Claude Code detected"
     } else {
@@ -156,7 +185,7 @@ function Detect-Agents {
         $Global:Agents += "codex"
         $Global:AgentNames["codex"] = "OpenAI Codex"
         $Global:AgentConfigs["codex"] = ".codex.md"
-        $Global:AgentPaths["codex"] = "$env:USERPROFILE\.codex"
+        $Global:AgentPaths["codex"] = Join-Path $env:USERPROFILE ".codex"
         $Global:AgentDetect["codex"] = "cli at: $(Get-Command codex | Select-Object -ExpandProperty Source)"
         Write-Ok "OpenAI Codex detected"
     } else {
@@ -211,11 +240,11 @@ function Detect-Agents {
     }
 
     # Gemini
-    if (Test-Command gemini -or (Test-Path "$env:USERPROFILE\.gemini\config.json")) {
+    if (Test-Command gemini -or (Test-Path (Join-Path $env:USERPROFILE ".gemini\config.json"))) {
         $Global:Agents += "gemini"
         $Global:AgentNames["gemini"] = "Google Gemini"
         $Global:AgentConfigs["gemini"] = "GEMINI.md"
-        $Global:AgentPaths["gemini"] = "$env:USERPROFILE\.gemini"
+        $Global:AgentPaths["gemini"] = Join-Path $env:USERPROFILE ".gemini"
         $Global:AgentDetect["gemini"] = "detected"
         Write-Ok "Gemini detected"
     } else {
@@ -310,12 +339,12 @@ function Select-Agents {
 function Clone-Or-Update {
     Write-Step "Setting Up Skill Repository"
 
-    if (Test-Path "$SkillDir\.git") {
+    if (Test-Path (Join-Path $SkillDir ".git")) {
         Write-Info "Repository exists at $SkillDir"
         Write-Info "Pulling latest changes..."
         Push-Location $SkillDir
         try {
-            $output = git pull --ff-only origin main 2>&1
+            $output = git @LfsOff pull --ff-only origin main 2>&1
             if ($LASTEXITCODE -ne 0) {
                 Write-Warn "Pull may have had issues (exit code: $LASTEXITCODE), continuing"
             }
@@ -328,7 +357,7 @@ function Clone-Or-Update {
         }
     } else {
         Write-Info "Cloning into $SkillDir..."
-        $output = git clone --depth 1 $RepoUrl $SkillDir 2>&1
+        $output = git @LfsOff clone --depth 1 $RepoUrl $SkillDir 2>&1
         if ($LASTEXITCODE -ne 0) {
             Write-Err "Clone failed (exit code: $LASTEXITCODE)"
             if ($output) { $output | ForEach-Object { Write-Err "  git: $_" } }
@@ -488,7 +517,7 @@ function Configure-Agent($agent) {
 
     switch ($agent) {
         "claude" {
-            $dest = "$env:USERPROFILE\.claude\instructions.md"
+            $dest = Join-Path $env:USERPROFILE ".claude\instructions.md"
             New-Item -ItemType Directory -Path (Split-Path $dest) -Force | Out-Null
             Copy-Item $src $dest -Force
             Write-Ok "Copied $config → $dest"
@@ -500,16 +529,16 @@ function Configure-Agent($agent) {
             Write-Info "Skills available via: @skills/ios-kernel-exploit.md (etc.)"
         }
         "codex" {
-            $dest = "$env:USERPROFILE\.codex\instructions.md"
+            $dest = Join-Path $env:USERPROFILE ".codex\instructions.md"
             New-Item -ItemType Directory -Path (Split-Path $dest) -Force | Out-Null
             Copy-Item $src $dest -Force
             Write-Ok "Copied $config → $dest"
-            Write-Info "Run: codex --instructions $env:USERPROFILE\.codex\instructions.md"
+            Write-Info "Run: codex --instructions $(Join-Path $env:USERPROFILE '.codex\instructions.md')"
         }
         "opencode" {
             Write-Info "OpenCode discovers skills from ~/.config/opencode/skills/<name>/SKILL.md"
             Write-Info "Skills are symlinked globally - available in every project."
-            Write-Info "Project-local copies also live at $SkillDir\.opencode\skills\"
+            Write-Info "Project-local copies also live at $(Join-Path $SkillDir '.opencode\skills')"
         }
         "windsurf" {
             Write-Info "Windsurf auto-ingests .windsurfrules from the workspace directory."
@@ -523,7 +552,7 @@ function Configure-Agent($agent) {
             Write-Info "GitHub Copilot will use these instructions on this repo."
         }
         "gemini" {
-            $dest = "$env:USERPROFILE\.gemini\GEMINI.md"
+            $dest = Join-Path $env:USERPROFILE ".gemini\GEMINI.md"
             New-Item -ItemType Directory -Path (Split-Path $dest) -Force | Out-Null
             Copy-Item $src $dest -Force
             Write-Ok "Copied $config → $dest"
@@ -557,9 +586,9 @@ function Verify-Setup {
         $exists = Test-Path $src
 
         $dest = switch ($agent) {
-            "claude"  { "$env:USERPROFILE\.claude\instructions.md" }
-            "codex"   { "$env:USERPROFILE\.codex\instructions.md" }
-            "gemini"  { "$env:USERPROFILE\.gemini\GEMINI.md" }
+            "claude"  { Join-Path $env:USERPROFILE ".claude\instructions.md" }
+            "codex"   { Join-Path $env:USERPROFILE ".codex\instructions.md" }
+            "gemini"  { Join-Path $env:USERPROFILE ".gemini\GEMINI.md" }
             default   { $src }
         }
         $destExists = Test-Path $dest
@@ -573,17 +602,17 @@ function Verify-Setup {
 
     Write-Host ""
     Write-Host "  Skill files:" -ForegroundColor White
-    $skillCount = (Get-ChildItem "$SkillDir\skills\*.md" -ErrorAction SilentlyContinue).Count
-    $optionCount = (Get-ChildItem "$SkillDir\options\*.md" -ErrorAction SilentlyContinue).Count
+    $skillCount = (Get-ChildItem (Join-Path $SkillDir "skills\*.md") -ErrorAction SilentlyContinue).Count
+    $optionCount = (Get-ChildItem (Join-Path $SkillDir "options\*.md") -ErrorAction SilentlyContinue).Count
     $opencodeSkillCount = 0
     $opencodeSkillsDir = Join-Path $SkillDir ".opencode\skills"
     if (Test-Path $opencodeSkillsDir) {
-        $opencodeSkillCount = (Get-ChildItem "$opencodeSkillsDir\*\SKILL.md" -ErrorAction SilentlyContinue).Count
+        $opencodeSkillCount = (Get-ChildItem (Join-Path $opencodeSkillsDir "*\SKILL.md") -ErrorAction SilentlyContinue).Count
     }
     $globalOpencodeSkillCount = 0
     $globalOpencodeSkillsDir = Join-Path $env:USERPROFILE ".config\opencode\skills"
     if (Test-Path $globalOpencodeSkillsDir) {
-        $globalOpencodeSkillCount = (Get-ChildItem "$globalOpencodeSkillsDir\*\SKILL.md" -ErrorAction SilentlyContinue).Count
+        $globalOpencodeSkillCount = (Get-ChildItem (Join-Path $globalOpencodeSkillsDir "*\SKILL.md") -ErrorAction SilentlyContinue).Count
     }
     Write-Host "  [+] $skillCount skills loaded" -ForegroundColor Green
     Write-Host "  [+] $optionCount options available" -ForegroundColor Green
@@ -596,7 +625,7 @@ function Verify-Setup {
         switch ($agent) {
             "claude"   { Write-Host "    claude `"Load ios-kernel-exploit skill`"" -ForegroundColor Cyan }
             "cursor"   { Write-Host "    cursor $SkillDir   (open workspace)" -ForegroundColor Cyan }
-            "codex"    { Write-Host "    codex --instructions `"$env:USERPROFILE\.codex\instructions.md`"" -ForegroundColor Cyan }
+            "codex"    { Write-Host "    codex --instructions `"$(Join-Path $env:USERPROFILE '.codex\instructions.md')`"" -ForegroundColor Cyan }
             "opencode" { Write-Host "    opencode                (skills auto-discovered globally)" -ForegroundColor Cyan }
             "windsurf" { Write-Host "    windsurf $SkillDir  (open workspace)" -ForegroundColor Cyan }
             default    { Write-Host "    $agent config ready at $src" -ForegroundColor Cyan }

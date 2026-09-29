@@ -76,38 +76,34 @@ closed, and how to hunt.
   (Apache 2.0). Everything else is binary-only: extract from the dyld
   shared cache and reverse.
 
-## Verified ALAC findings (BB-038/BB-039 family)
+## Open-source ALAC decoder - how to audit it
 
-ALACDecoder.cpp (apple/ALAC codec/):
+github.com/apple/ALAC is the only open-source Apple audio code, so it is the one
+audio target you can both read and fuzz. Classes that pay off, in order:
 
-- **partialFrame numSamples heap overflow**: 1-bit partialFrame flag
-  overrides the caller's numSamples with 32 bits from the bitstream
-  (ALACDecoder.cpp:250-254, 401-405) with no bound against
-  mConfig.frameLength, which alone sizes mMixBufferU/V + mPredictor
-  (calloc at Init, :135-139). Overflow sites: `mMixBufferU[i] = val`
-  (:309 uncompressed SCE), `*outPtr++ = del` in dyn_decomp
-  (ag_dec.c:321), mShiftBuffer writes (:336, :520-524), unmix24/32
-  shiftUV OOB reads (matrix_dec.c). Also triggers with caller
-  numSamples > frameLength and no partialFrame. ASAN-verified.
-- **Init() magic cookie OOB read**: `theActualCookie[4..7]` read for
-  'frma'/'alac' atom sniffing BEFORE any size check (ALACDecoder.cpp:
-  101-113); `theCookieBytesRemaining -= 12` underflows for 5-12 byte
-  cookies, then 24 bytes parse from a shifted pointer. ASAN-verified
-  with a 4-byte cookie (stack-buffer-overflow READ at :102).
-- **Unbounded bitstream reads**: BitBufferRead/BitBufferReadSmall
-  (ALACBitUtilities.c:42-86) read cur[0..2] with the end check
-  commented out; truncated frames walk past the packet buffer
-  (ASAN-verified: heap-buffer-overflow READ). Bounds checking is
-  declared the caller's job and the callers do not do it.
+- **Length fields the stream can override.** A value that arrives from the
+  bitstream (a partial-frame flag, a sample count, an atom size) used to size or
+  index a buffer without being bounded against the config the buffer was
+  allocated for.
+- **Header parsing that runs before validation.** Atom sniffing that reads fixed
+  offsets out of the magic cookie before the remaining-size check, and the
+  subtraction that then underflows on a short cookie.
+- **Bit readers without an end check.** BitBufferRead/BitBufferReadSmall read
+  ahead of the packet end and leave the bound to the caller; callers that skip it
+  walk off a truncated frame.
 
-Reproduction harness pattern: build the crafted stream with the codec's
-own BitBufferWrite (no hand-assembled bits), cookie frameLength=1 +
-partialFrame numSamples=0x100000, decode under -fsanitize=address.
+Harness pattern that exposes all three: build the crafted stream with the codec's
+own BitBufferWrite (never hand-assemble bits), drive Init + Decode under
+`-fsanitize=address`, and assert on the ASAN report rather than on the returned
+status.
 
-Production caveat for bounty: the open-source repo is the reference
-implementation Apple ships; the production binary (AudioToolbox ALAC
-codec plugin in the dyld cache) must be disassembled and confirmed
-before submitting to Apple.
+Production caveat before any submission: the open-source repo is the reference
+implementation, not the shipping code. The production binary is the AudioToolbox
+ALAC codec plugin in the dyld shared cache - extract it, disassemble it, confirm
+the site is the same shape, and only then report.
+
+Sites found in a live audit are unreported until Apple ships a fix, so they stay
+out of this repo; they live in the local-only notes.
 
 ## Hunting playbook
 

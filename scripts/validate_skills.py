@@ -41,12 +41,11 @@ LEAK_PATTERNS = [
     (re.compile(r"sk-[A-Za-z0-9]{16,}"), "api key"),
 ]
 
-# Advisory ids are fine to warn about but must not fail CI: the audit ids
-# (BB-001..BB-031) are published in docs/researchdeepseek.md on purpose. New
-# bounty case ids must be reviewed by hand before they land.
-ADVISORY_PATTERNS = [
-    (re.compile(r"\bBB-\d{3}\b"), "case id (confirm it is a published audit id, not an embargoed report)"),
-]
+# Audit ids published on purpose in docs/researchdeepseek.md (BB-001..BB-031).
+# Anything outside that set is a tracker id for an unreported report and must not
+# be in a public repo: that is an error, not a warning.
+PUBLISHED_CASE_IDS = set(f"BB-{n:03d}" for n in range(1, 32))
+CASE_ID = re.compile(r"\bBB-\d{2,}\b")
 
 # Generated / vendored trees that are not knowledge-base content.
 SKIP_DIRS = {".git", ".opencode", ".hermes", "node_modules", "projects", "__pycache__"}
@@ -267,9 +266,13 @@ def main() -> int:
             for pat, label in LEAK_PATTERNS:
                 if pat.search(line):
                     rep.error(f"{rel}:{lineno}: possible leak — {label}: {line.strip()[:90]}")
-            for pat, label in ADVISORY_PATTERNS:
-                if pat.search(line):
-                    rep.warn(f"{rel}:{lineno}: {label}: {line.strip()[:70]}")
+            for m in CASE_ID.finditer(line):
+                if m.group(0) not in PUBLISHED_CASE_IDS:
+                    rep.error(
+                        f"{rel}:{lineno}: case id {m.group(0)} is outside the published "
+                        f"audit range (BB-001..BB-031) — an unreported case id must not "
+                        f"be in a public repo: {line.strip()[:70]}"
+                    )
     # also scan skill frontmatter
     for name, path in modules.items():
         text = open(path, encoding="utf-8", errors="replace").read()

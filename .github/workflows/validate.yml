@@ -22,3 +22,15 @@ jobs:
       - name: Referenced shell scripts parse
         run: |
           for f in $(find skills/references -name '*.sh'); do bash -n "$f"; done
+
+  installers:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      # pwsh is preinstalled on ubuntu runners, so the Windows scripts get a
+      # real round trip here too.
+      # Note: setup clones the default branch, so a PR that adds a module also
+      # needs that module on main before this job goes green. The static
+      # registry check in validate_skills.py has no such ordering.
+      - name: Installer round trip (bash + PowerShell)
+        run: ./scripts/test_installers.sh --ps
