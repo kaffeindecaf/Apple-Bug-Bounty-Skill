@@ -284,6 +284,51 @@ def main() -> int:
 
     print(f"docs scanned: {len(bodies)}")
 
+    # ---- 6. binary / git-lfs guard ---------------------------------------
+    # projects/ ships vendored trees that carry firmware binaries, and one of
+    # them was declared in .gitattributes as a git-lfs filter. A git-lfs pointer
+    # is useless locally (the object is not fetchable) and it breaks a plain
+    # `git clone` wherever git-lfs is configured: the smudge filter runs, cannot
+    # fetch, and git exits 128 with "Clone succeeded, but checkout failed".
+    LFS_POINTER = b"version https://git-lfs.github.com/spec/v1"
+    BIG_BLOB_MB = 50
+    big_mb = BIG_BLOB_MB * 1024 * 1024
+    checked = 0
+    for dirpath, dirnames, filenames in os.walk(root):
+        dirnames[:] = [d for d in dirnames if d != ".git"]
+        for fn in filenames:
+            path = os.path.join(dirpath, fn)
+            rel = os.path.relpath(path, root)
+            try:
+                size = os.path.getsize(path)
+            except OSError:
+                continue
+            checked += 1
+            if size > big_mb:
+                rep.error(
+                    f"{rel}: {size / 1024 / 1024:.0f} MB binary in a public knowledge-base "
+                    f"repo (limit {BIG_BLOB_MB} MB) — link to the upstream release instead"
+                )
+            if fn == ".gitattributes":
+                text = open(path, encoding="utf-8", errors="replace").read()
+                if re.search(r"filter\s*=\s*lfs", text):
+                    rep.error(
+                        f"{rel}: declares a git-lfs filter — the object is not fetchable "
+                        f"here and the smudge filter breaks a plain clone (git exit 128)"
+                    )
+            elif size < 2048:
+                try:
+                    with open(path, "rb") as fh:
+                        head = fh.read(len(LFS_POINTER))
+                except OSError:
+                    continue
+                if head == LFS_POINTER:
+                    rep.error(
+                        f"{rel}: git-lfs pointer file — it is a {size}-byte stub, and a "
+                        f"plain clone dies with exit 128 wherever git-lfs is configured"
+                    )
+    print(f"files scanned: {checked}")
+
     # ---- report ----------------------------------------------------------
     if args.verbose:
         for w in rep.warnings:
