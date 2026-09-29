@@ -11,6 +11,20 @@ $ProgressPreference = "SilentlyContinue"
 $SkillDir = Join-Path $env:USERPROFILE ".apple-bug-bounty-skill"
 $RepoUrl  = "https://github.com/kaffeindecaf/Apple-Bug-Bounty-Skill.git"
 
+# The vendored projects/ trees track large binaries with git-lfs, and a plain
+# clone runs the smudge filter wherever git-lfs is configured. That fails with
+# "Clone succeeded, but checkout failed" (exit 128) because those LFS objects
+# are not fetchable here, and the toolkit is text-only anyway. Clearing
+# filter.lfs.process is what stops the filter from being invoked at all;
+# required=false keeps any other filter from hard-failing the install.
+$LfsOff = @(
+    "-c", "filter.lfs.smudge=",
+    "-c", "filter.lfs.clean=",
+    "-c", "filter.lfs.process=",
+    "-c", "filter.lfs.required=false"
+)
+$env:GIT_LFS_SKIP_SMUDGE = "1"
+
 # ─────────────────────────────────────────────────
 # WOLF BANNER
 # ─────────────────────────────────────────────────
@@ -330,7 +344,7 @@ function Clone-Or-Update {
         Write-Info "Pulling latest changes..."
         Push-Location $SkillDir
         try {
-            $output = git pull --ff-only origin main 2>&1
+            $output = git @LfsOff pull --ff-only origin main 2>&1
             if ($LASTEXITCODE -ne 0) {
                 Write-Warn "Pull may have had issues (exit code: $LASTEXITCODE), continuing"
             }
@@ -343,7 +357,7 @@ function Clone-Or-Update {
         }
     } else {
         Write-Info "Cloning into $SkillDir..."
-        $output = git clone --depth 1 $RepoUrl $SkillDir 2>&1
+        $output = git @LfsOff clone --depth 1 $RepoUrl $SkillDir 2>&1
         if ($LASTEXITCODE -ne 0) {
             Write-Err "Clone failed (exit code: $LASTEXITCODE)"
             if ($output) { $output | ForEach-Object { Write-Err "  git: $_" } }

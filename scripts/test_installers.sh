@@ -31,6 +31,16 @@ fail()  { printf '  FAIL  %s\n' "$1"; FAILED=$((FAILED + 1)); }
 check() { if [ "$2" = "$3" ]; then ok "$1 ($3)"; else fail "$1: expected $3, got $2"; fi; }
 assert(){ if [ "$2" = "0" ]; then ok "$1"; else fail "$1"; fi; }
 
+# git-lfs configured, as it is on the CI runner and on any machine that has it
+# installed. projects/ tracks large binaries with git-lfs, so a clone that lets
+# the smudge filter run dies with "Clone succeeded, but checkout failed" (128)
+# and the install is dead. Every clone in this test happens under this config.
+cat > "$SANDBOX/.gitconfig" <<'GITCONFIG'
+[filter "lfs"]
+	process = git-lfs filter-process
+	required = true
+GITCONFIG
+
 # A stub `opencode` on PATH is what makes setup exercise the OpenCode branch.
 mkdir -p "$SANDBOX/bin"
 printf '#!/bin/sh\necho "1.18.16"\n' > "$SANDBOX/bin/opencode"
@@ -44,9 +54,13 @@ count_refs()     { find "$(links_dir)" -maxdepth 2 -name references 2>/dev/null 
 count_dangling() { find "$(links_dir)" -xtype l 2>/dev/null | wc -l | tr -d ' '; }
 readable()       { head -1 "$1" >/dev/null 2>&1; }
 show_log() {
+    # \r -> \n first: the progress spinner rewrites one long line, so a raw tail
+    # would dump the whole spin history instead of the error
     printf '  ---- %s ----\n' "$1"
-    grep -aiE 'fatal|error|denied|unable|failed|timed out|not found' "$SANDBOX/$1" 2>/dev/null | tail -8 | sed 's/^/  ! /'
-    tail -6 "$SANDBOX/$1" 2>/dev/null | sed 's/^/  | /'
+    tr '\r' '\n' < "$SANDBOX/$1" 2>/dev/null \
+        | grep -aiE 'fatal|error|denied|unable|failed|timed out|not found' \
+        | tail -6 | cut -c1-160 | sed 's/^/  ! /'
+    tr '\r' '\n' < "$SANDBOX/$1" 2>/dev/null | tail -4 | cut -c1-160 | sed 's/^/  | /'
 }
 
 # Caller sets SETUP_CMD / UNINSTALL_CMD to a command + args before calling.

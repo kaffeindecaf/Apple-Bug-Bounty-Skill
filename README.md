@@ -196,7 +196,7 @@ python3 scripts/validate_skills.py     # frontmatter, cross-references, dead lin
 
 Run both after any edit. Neither writes outside a temp dir: the installer test builds its own sandbox `HOME`, stubs `opencode` on `PATH`, and removes the sandbox on exit. CI runs both on every push and pull request.
 
-The installer test asserts the things that have broken before: that 18 dirs get linked and all 18 get removed, that `references` symlinks travel with their skill and are cleaned up, that a skill dir the user installed by hand survives, that a second `setup` run changes nothing, and that dangling links are recoverable after the repo has been deleted.
+The installer test asserts the things that have broken before: that 18 dirs get linked and all 18 get removed, that `references` symlinks travel with their skill and are cleaned up, that a skill dir the user installed by hand survives, that a second `setup` run changes nothing, and that dangling links are recoverable after the repo has been deleted. Every clone in it runs with git-lfs configured, which is the condition that made `setup` exit 128 in the first place.
 
 ### How the skills fit together
 
@@ -234,6 +234,14 @@ The skills are built from these. The table shows which technique each project us
 | TrollStore | opa334 | CoreTrust bypass | 14–17 | --- | --- | --- |
 | usbliter8-fun | wh1te4ever | Checkm8 bootchain | 15.6+27 | Yes | Yes | Yes |
 | usbliter8-fun2 | 34306 | Checkm8 jailbreak | 27.0b2 | Yes | Yes | Yes |
+
+`usbliter8-fun` tracks its ramdisks through git-lfs (`projects/usbliter8-fun/.gitattributes`), and one of them is a 266 MB pointer. That breaks a plain `git clone` on any machine that has git-lfs installed: the smudge filter runs, cannot fetch the object, and git exits 128 with *"Clone succeeded, but checkout failed"*. `./setup` and `.\setup.ps1` therefore clone with the lfs filters disabled (`-c filter.lfs.process=`, `GIT_LFS_SKIP_SMUDGE=1`) — the toolkit is text only, so the payload is never needed. If you clone by hand and hit that error, use:
+
+```bash
+GIT_LFS_SKIP_SMUDGE=1 git clone --depth 1 \
+  -c filter.lfs.process= -c filter.lfs.required=false \
+  https://github.com/kaffeindecaf/Apple-Bug-Bounty-Skill.git
+```
 
 ## Research findings
 

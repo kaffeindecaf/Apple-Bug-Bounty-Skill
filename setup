@@ -60,6 +60,19 @@ draw_progress_bar() {
 # GIT CLONE WITH PROGRESS BAR
 # ─────────────────────────────────────────────────
 
+# The vendored projects/ trees track large binaries with git-lfs, and a plain
+# clone runs the smudge filter wherever git-lfs is configured. That fails with
+# "Clone succeeded, but checkout failed" (exit 128) because those LFS objects
+# are not fetchable here, and the toolkit is text-only anyway. Clearing
+# filter.lfs.process is what stops the filter from being invoked at all;
+# required=false keeps any other filter from hard-failing the install.
+LFS_OFF=(
+    -c filter.lfs.smudge=
+    -c filter.lfs.clean=
+    -c filter.lfs.process=
+    -c filter.lfs.required=false
+)
+
 clone_with_progress() {
     local url="$1" dest="$2"
     local tmpfile
@@ -68,7 +81,8 @@ clone_with_progress() {
     log_info "Cloning $url into $dest ..."
     echo ""
 
-    git clone --progress --depth 1 "$url" "$dest" 2>"$tmpfile" &
+    GIT_LFS_SKIP_SMUDGE=1 git clone --progress --depth 1 "${LFS_OFF[@]}" \
+        "$url" "$dest" 2>"$tmpfile" &
     local pid=$!
 
     local chars="/-\|" i=0
@@ -90,11 +104,17 @@ clone_with_progress() {
     printf "\r\033[K"
     wait "$pid"
     local rc=$?
-    rm -f "$tmpfile"
     if [ $rc -ne 0 ]; then
         log_err "Clone failed (exit code: $rc)"
+        # print git's own error before discarding the log, otherwise the cause
+        # is gone: a silent 128 is undiagnosable
+        if [ -s "$tmpfile" ]; then
+            while IFS= read -r line; do log_err "  git: $line"; done < <(tail -6 "$tmpfile")
+        fi
+        rm -f "$tmpfile"
         return 1
     fi
+    rm -f "$tmpfile"
     draw_progress_bar 100 100 "Cloning"
     echo ""
     log_ok "Repository cloned successfully"
@@ -112,7 +132,7 @@ pull_with_progress() {
 
     (
         cd "$workdir"
-        git pull --ff-only origin main 2>"$tmpfile"
+        GIT_LFS_SKIP_SMUDGE=1 git "${LFS_OFF[@]}" pull --ff-only origin main 2>"$tmpfile"
     ) &
     local pid=$!
 
