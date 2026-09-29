@@ -1,7 +1,7 @@
 # Cursor Rules — Apple-Bug-Bounty-Skill
 
 ## Workspace Configuration
-This workspace contains a curated iOS exploit development knowledge base with 10 specialized skill modules, 8 output options, and 10 reference projects.
+This workspace contains a curated iOS exploit development knowledge base with 17 specialized skill modules, 8 output options, and 10 reference projects.
 
 ## Options Pipeline
 
@@ -45,6 +45,9 @@ Load `@options/{flag}.md` for each flag. Flags stack.
 **CoreTrust Bypass** (perma-sign, fastPathSign, CMS signature, cdhash, TrollStore, entitlement injection):
 → `@skills/ios-coretrust-bypass.md`
 
+**Media Frameworks** (AudioToolbox, CoreText, PDFKit, libxml2, ICU, parser fuzzing):
+→ `@skills/ios-media-frameworks.md`
+
 **Research Methodology** (bug hunting, audit protocol, learning path, getting started):
 → `@skills/ios-research-methodology.md`
 
@@ -59,3 +62,21 @@ Never hallucinate iOS kernel struct offsets. Always reference the skill files or
 
 ## Citation Format
 When answering, cite the skill file and section: `skills/ios-kernel-exploit.md §3.1`
+
+**Bounty Submission** (report portal, paste blocks, voice rules, payout framing):
+→ `@skills/apple-bounty-submission.md`
+
+**Variant Hunting** (sibling bugs, advisory→fix-commit mapping, branch sweep, affected versions):
+→ `@skills/ios-variant-hunting.md`
+
+**PoC Lab** (host-side PoCs, ASAN harnesses, falsification, no device needed):
+→ `@skills/ios-poc-lab.md`
+
+**Device USB Tooling** (pairing, idevicesyslog, iproxy USB SSH, crash and panic pulls):
+→ `@skills/ios-device-usb-tooling.md`
+
+**Firmware & Offset Research** (IPSW, im4p, offset migration, XPF, kcwatch):
+→ `@skills/ios-firmware-offset-research.md`
+
+**Apple MTE Research** (MIE/EMTE, A19 tag storage, XZone, bypass classes):
+→ `@skills/apple-mte-research.md`

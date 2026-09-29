@@ -17,7 +17,7 @@ $RepoUrl  = "https://github.com/kaffeindecaf/Apple-Bug-Bounty-Skill.git"
 
 function Show-Banner {
     Write-Host "          Apple-Bug-Bounty-Skill Setup" -ForegroundColor White
-    Write-Host "    10 skills · 8 options · 9 agents · 0 fluff" -ForegroundColor Cyan
+    Write-Host "    17 skills · 8 options · 9 agents · 0 fluff" -ForegroundColor Cyan
     Write-Host ""
 }
 
@@ -352,7 +352,14 @@ function Clone-Or-Update {
         "skills/ios-webkit-exploit.md",
         "skills/ios-puaf-exploit.md",
         "skills/ios-coretrust-bypass.md",
-        "skills/ios-research-methodology.md"
+        "skills/ios-research-methodology.md",
+        "skills/ios-media-frameworks.md",
+        "skills/apple-bounty-submission.md",
+        "skills/ios-variant-hunting.md",
+        "skills/ios-poc-lab.md",
+        "skills/ios-device-usb-tooling.md",
+        "skills/ios-firmware-offset-research.md",
+        "skills/apple-mte-research.md"
     )
     foreach ($f in $required) {
         $full = Join-Path $SkillDir $f
@@ -396,6 +403,13 @@ function Setup-OpenCodeSkills {
         "ios-puaf-exploit"           = "skills\ios-puaf-exploit.md"
         "ios-coretrust-bypass"       = "skills\ios-coretrust-bypass.md"
         "ios-research-methodology"   = "skills\ios-research-methodology.md"
+        "ios-media-frameworks"       = "skills\ios-media-frameworks.md"
+        "apple-bounty-submission"    = "skills\apple-bounty-submission.md"
+        "ios-variant-hunting"        = "skills\ios-variant-hunting.md"
+        "ios-poc-lab"                = "skills\ios-poc-lab.md"
+        "ios-device-usb-tooling"     = "skills\ios-device-usb-tooling.md"
+        "ios-firmware-offset-research" = "skills\ios-firmware-offset-research.md"
+        "apple-mte-research"         = "skills\apple-mte-research.md"
     }
 
     $total = $skillMap.Count
@@ -415,6 +429,20 @@ function Setup-OpenCodeSkills {
             } catch {
                 Copy-Item $src (Join-Path $dstdir "SKILL.md") -Force
                 Copy-Item $src (Join-Path $globalDstdir "SKILL.md") -Force
+            }
+            # supporting references travel with the skill so relative links resolve
+            $refDir = Join-Path $SkillDir "skills\references\$name"
+            if (Test-Path $refDir) {
+                foreach ($target in @($dstdir, $globalDstdir)) {
+                    $refLink = Join-Path $target "references"
+                    if (-not (Test-Path $refLink)) {
+                        try {
+                            New-Item -ItemType SymbolicLink -Path $refLink -Target $refDir -ErrorAction Stop | Out-Null
+                        } catch {
+                            Copy-Item $refDir $refLink -Recurse -Force
+                        }
+                    }
+                }
             }
             $count++
         } else {

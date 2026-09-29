@@ -1,0 +1,22 @@
+name: validate
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Validate knowledge base
+        run: python3 scripts/validate_skills.py --verbose
+      - name: Shell syntax check
+        run: bash -n setup uninstall
+      - name: Referenced shell scripts parse
+        run: |
+          for f in $(find skills/references -name '*.sh'); do bash -n "$f"; done
