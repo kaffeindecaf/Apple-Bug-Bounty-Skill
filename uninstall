@@ -18,19 +18,11 @@ NC='\033[0m'
 
 SKILL_DIR="$HOME/.apple-bug-bounty-skill"
 
-SKILL_NAMES=(
-    "master-router"
-    "ios-kernel-exploit"
-    "ios-sandbox-escape"
-    "ios-security-pentesting"
-    "ios-misc-tooling"
-    "ios-bootchain-exploit"
-    "ios-code-injection"
-    "ios-webkit-exploit"
-    "ios-puaf-exploit"
-    "ios-coretrust-bypass"
-    "ios-research-methodology"
-)
+# Marker used to identify our own symlinks in ~/.config/opencode/skills.
+# Matching the link target instead of a hardcoded name list is deliberate: the
+# list drifted twice (a module added to setup but not here left dangling links
+# behind) and a stale link still carries this path even when it is broken.
+SKILL_DIR_MARKER="/.apple-bug-bounty-skill/"
 
 log_info()  { echo -e "  ${BLUE}[INFO]${NC}  $1"; }
 log_ok()    { echo -e "  ${GREEN}[OK]${NC}    $1"; }
@@ -48,15 +40,39 @@ remove_opencode_skills() {
     local removed=0
 
     if [ -d "$global_skills_dir" ]; then
-        for name in "${SKILL_NAMES[@]}"; do
-            local dir="$global_skills_dir/$name"
-            if [ -L "$dir/SKILL.md" ]; then
-                rm -f "$dir/SKILL.md"
-                rmdir "$dir" 2>/dev/null || true
-                removed=$((removed + 1))
-                log_ok "Removed $name"
-            fi
+        # setup records every name it linked; fall back to it when a link target
+        # cannot be read back.
+        local manifest="$global_skills_dir/.apple-bug-bounty-skill.links"
+        local recorded=""
+        [ -f "$manifest" ] && recorded=$(cat "$manifest" 2>/dev/null || true)
+
+        for dir in "$global_skills_dir"/*/; do
+            [ -d "$dir" ] || continue
+            local name; name=$(basename "$dir")
+            local link="$dir/SKILL.md"
+            [ -L "$link" ] || continue
+
+            # readlink (not readlink -f): a stale link whose target is gone must
+            # still be recognised as ours and removed.
+            local target
+            target=$(readlink "$link" 2>/dev/null || true)
+            case "$target" in
+                *"$SKILL_DIR_MARKER"*) ;;
+                *)
+                    if ! grep -qxF "$name" <<<"$recorded"; then
+                        continue
+                    fi
+                    ;;
+            esac
+
+            rm -f "$link"
+            rm -f "$dir/references"        # added by setup for skills with references
+            rmdir "$dir" 2>/dev/null || true
+            removed=$((removed + 1))
+            log_ok "Removed $name"
         done
+
+        rm -f "$manifest"
     else
         log_info "No global OpenCode skills directory found"
     fi

@@ -228,7 +228,38 @@ def main() -> int:
             if skill not in on_disk:
                 rep.error(f"SKILL.md: references skills/references/{skill}/ which does not exist")
 
-    # ---- 4. public-repo leak guard ---------------------------------------
+    # ---- 4. installer / uninstaller drift ---------------------------------
+    # A module added to skills/ but not to the installers is invisible to users;
+    # a module added to setup but not to the uninstaller leaves dangling links.
+    module_names = set(modules)
+    for rel in ("setup", "setup.ps1"):
+        p = os.path.join(root, rel)
+        if not os.path.isfile(p):
+            rep.error(f"{rel} missing")
+            continue
+        text = open(p, encoding="utf-8", errors="replace").read().replace("\\", "/")
+        listed = set(re.findall(r"skills/([a-z0-9-]+)\.md", text))
+        for name in sorted(module_names - listed):
+            rep.error(
+                f"{rel}: skill module '{name}' is not registered — add it to SKILL_MAP "
+                f"and the required-files list, or users never get it"
+            )
+        for name in sorted(listed - module_names):
+            rep.error(f"{rel}: references skills/{name}.md which does not exist")
+    for rel in ("uninstall", "uninstall.ps1"):
+        p = os.path.join(root, rel)
+        if not os.path.isfile(p):
+            rep.error(f"{rel} missing")
+            continue
+        text = open(p, encoding="utf-8", errors="replace").read()
+        for name in sorted(module_names & set(re.findall(r"\b([a-z0-9-]+)\b", text))):
+            if re.search(rf'["\']{re.escape(name)}["\']', text):
+                rep.error(
+                    f"{rel}: hardcodes the module name '{name}' — clean up by link target "
+                    f"instead, a name list drifts and leaves dangling links behind"
+                )
+
+    # ---- 5. public-repo leak guard ---------------------------------------
     for rel, body in bodies.items():
         if rel.startswith("projects/"):
             continue  # vendored third-party trees

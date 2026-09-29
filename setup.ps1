@@ -414,6 +414,9 @@ function Setup-OpenCodeSkills {
 
     $total = $skillMap.Count
     $count = 0
+    # Manifest of everything we link, so uninstall does not need a hardcoded
+    # name list (which drifted) and can still clean up a dangling link.
+    $linked = New-Object System.Collections.Generic.List[string]
 
     foreach ($name in $skillMap.Keys) {
         $src = Join-Path $SkillDir $skillMap[$name]
@@ -445,10 +448,16 @@ function Setup-OpenCodeSkills {
                 }
             }
             $count++
+            $linked.Add($name)
         } else {
             Write-Warn "Skill source not found: $src"
         }
     }
+
+    $manifestPath = Join-Path $globalSkillsDir ".apple-bug-bounty-skill.links"
+    # ascii, not utf8: PowerShell 5.1 writes a BOM with -Encoding UTF8 and the
+    # uninstaller would then read a mangled first name.
+    $linked | Set-Content -LiteralPath $manifestPath -Encoding ascii
 
     Write-Ok "Created $count OpenCode skill links in $skillsDir"
     Write-Ok "Created $count global OpenCode skill links in $globalSkillsDir"

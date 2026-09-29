@@ -211,7 +211,7 @@ check_deps() {
 # ─────────────────────────────────────────────────
 
 AGENTS=()
-declare -A AGENT_NAMES AGENT_CONFIGS AGENT_PATHS AGENT_DETECT AGENT_IDX
+declare -A AGENT_NAMES AGENT_CONFIGS AGENT_DETECT AGENT_IDX
 
 detect_agents() {
     log_step "Detecting Installed AI Agents"
@@ -222,7 +222,6 @@ detect_agents() {
         AGENTS+=("claude")
         AGENT_NAMES["claude"]="Claude Code"
         AGENT_CONFIGS["claude"]=".claude/instructions.md"
-        AGENT_PATHS["claude"]="$HOME/.claude"
         AGENT_DETECT["claude"]="cli at: $(command -v claude)"
         log_ok "Claude Code detected — ${AGENT_DETECT["claude"]}"
     else
@@ -234,7 +233,6 @@ detect_agents() {
         AGENTS+=("cursor")
         AGENT_NAMES["cursor"]="Cursor"
         AGENT_CONFIGS["cursor"]=".cursorrules"
-        AGENT_PATHS["cursor"]="$SKILL_DIR"
         AGENT_DETECT["cursor"]="app detected"
         log_ok "Cursor detected"
     else
@@ -246,7 +244,6 @@ detect_agents() {
         AGENTS+=("codex")
         AGENT_NAMES["codex"]="OpenAI Codex"
         AGENT_CONFIGS["codex"]=".codex.md"
-        AGENT_PATHS["codex"]="$HOME/.codex"
         AGENT_DETECT["codex"]="cli at: $(command -v codex)"
         log_ok "OpenAI Codex detected — ${AGENT_DETECT["codex"]}"
     else
@@ -260,7 +257,6 @@ detect_agents() {
         AGENTS+=("opencode")
         AGENT_NAMES["opencode"]="OpenCode"
         AGENT_CONFIGS["opencode"]="opencode.json"
-        AGENT_PATHS["opencode"]="$SKILL_DIR"
         AGENT_DETECT["opencode"]="cli at: $(command -v opencode) (v${opencode_version})"
         log_ok "OpenCode detected — ${AGENT_DETECT["opencode"]}"
     else
@@ -272,7 +268,6 @@ detect_agents() {
         AGENTS+=("windsurf")
         AGENT_NAMES["windsurf"]="Windsurf"
         AGENT_CONFIGS["windsurf"]=".windsurfrules"
-        AGENT_PATHS["windsurf"]="$SKILL_DIR"
         AGENT_DETECT["windsurf"]="app detected"
         log_ok "Windsurf detected"
     else
@@ -284,7 +279,6 @@ detect_agents() {
         AGENTS+=("copilot")
         AGENT_NAMES["copilot"]="GitHub Copilot"
         AGENT_CONFIGS["copilot"]=".github/copilot-instructions.md"
-        AGENT_PATHS["copilot"]="$SKILL_DIR"
         AGENT_DETECT["copilot"]="gh extension detected"
         log_ok "GitHub Copilot detected"
     else
@@ -296,7 +290,6 @@ detect_agents() {
         AGENTS+=("gemini")
         AGENT_NAMES["gemini"]="Google Gemini"
         AGENT_CONFIGS["gemini"]="GEMINI.md"
-        AGENT_PATHS["gemini"]="$HOME/.gemini"
         AGENT_DETECT["gemini"]="cli detected"
         log_ok "Gemini detected"
     else
@@ -307,14 +300,12 @@ detect_agents() {
     AGENTS+=("qwen")
     AGENT_NAMES["qwen"]="Alibaba Qwen"
     AGENT_CONFIGS["qwen"]="qwen-extension.json"
-    AGENT_PATHS["qwen"]="$SKILL_DIR"
     AGENT_DETECT["qwen"]="always available (config-only)"
 
     # Kimi
     AGENTS+=("kimi")
     AGENT_NAMES["kimi"]="Moonshot Kimi"
     AGENT_CONFIGS["kimi"]="kimi.plugin.json"
-    AGENT_PATHS["kimi"]="$SKILL_DIR"
     AGENT_DETECT["kimi"]="always available (config-only)"
 
     echo ""
@@ -333,7 +324,7 @@ select_agents() {
     echo ""
 
     local idx=1
-    for key in "${!AGENT_IDX[@]}"; do unset 'AGENT_IDX[$key]'; done
+    AGENT_IDX=()                      # re-entrant: this runs once per invocation today
     for agent in "${AGENTS[@]}"; do
         local name="${AGENT_NAMES[$agent]}"
         local detect="${AGENT_DETECT[$agent]}"
@@ -420,6 +411,10 @@ setup_opencode_skills() {
 
     local total=${#SKILL_MAP[@]}
     local count=0
+    # Manifest of everything we link, so uninstall does not need a hardcoded
+    # name list (which drifted) and can still clean up a dangling link.
+    local manifest="$global_skills_dir/.apple-bug-bounty-skill.links"
+    : > "$manifest"
 
     for name in "${!SKILL_MAP[@]}"; do
         local src="${SKILL_MAP[$name]}"
@@ -435,6 +430,7 @@ setup_opencode_skills() {
                 ln -sfn "$SKILL_DIR/skills/references/$name" "$dstdir/references"
                 ln -sfn "$SKILL_DIR/skills/references/$name" "$global_dstdir/references"
             fi
+            printf '%s\n' "$name" >> "$manifest"
             count=$((count + 1))
             draw_progress_bar "$count" "$total" "Linking skills"
         else
@@ -450,7 +446,8 @@ setup_opencode_skills() {
     # Back up existing opencode.json at the target if it exists
     local target_json="$SKILL_DIR/opencode.json"
     if [ -f "$target_json" ]; then
-        local backup="$target_json.bak.$(date +%s)"
+        local backup
+        backup="$target_json.bak.$(date +%s)"
         cp "$target_json" "$backup"
         log_info "Backed up existing opencode.json to $backup"
     fi
@@ -539,7 +536,6 @@ configure_agent() {
     local idx="$3"
     local name="${AGENT_NAMES[$agent]}"
     local config="${AGENT_CONFIGS[$agent]}"
-    local path="${AGENT_PATHS[$agent]}"
 
     draw_progress_bar "$idx" "$total" "Configuring $name"
     echo ""

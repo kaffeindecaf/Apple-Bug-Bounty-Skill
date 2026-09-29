@@ -17,6 +17,8 @@ jobs:
         run: python3 scripts/validate_skills.py --verbose
       - name: Shell syntax check
         run: bash -n setup uninstall
+      - name: Shellcheck (errors only)
+        run: shellcheck --severity=error setup uninstall
       - name: Referenced shell scripts parse
         run: |
           for f in $(find skills/references -name '*.sh'); do bash -n "$f"; done

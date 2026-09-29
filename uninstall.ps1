@@ -8,19 +8,13 @@ $ErrorActionPreference = "Stop"
 
 $SkillDir = Join-Path $env:USERPROFILE ".apple-bug-bounty-skill"
 
-$SkillNames = @(
-    "master-router",
-    "ios-kernel-exploit",
-    "ios-sandbox-escape",
-    "ios-security-pentesting",
-    "ios-misc-tooling",
-    "ios-bootchain-exploit",
-    "ios-code-injection",
-    "ios-webkit-exploit",
-    "ios-puaf-exploit",
-    "ios-coretrust-bypass",
-    "ios-research-methodology"
-)
+# Identify our own symlinks by their target instead of a hardcoded name list.
+# The list drifted twice (a module added to setup.ps1 but not here left dangling
+# links behind) and a stale link still carries this path even when it is broken.
+$SkillDirMarker = ".apple-bug-bounty-skill"
+# setup.ps1 also records every name it linked, as a fallback for link targets a
+# given PowerShell version cannot read back.
+$ManifestName = ".apple-bug-bounty-skill.links"
 
 function Write-Info { Write-Host "  [INFO]  $args" -ForegroundColor Blue }
 function Write-Ok   { Write-Host "  [OK]    $args" -ForegroundColor Green }
@@ -31,27 +25,50 @@ function Write-Step { Write-Host ""; Write-Host "─── $args ───" -For
 # REMOVE OPENCODE GLOBAL SKILL LINKS
 # ─────────────────────────────────────────────────
 
+function Get-LinkTarget {
+    param([string]$Path)
+    $item = Get-Item -LiteralPath $Path -Force -ErrorAction SilentlyContinue
+    if (-not $item) { return "" }
+    # LinkTarget is PowerShell 6+, Target covers 5.1 reparse points
+    return "$($item.LinkTarget)$($item.Target)"
+}
+
 function Remove-OpenCodeSkills {
     Write-Step "Removing OpenCode Skill Links"
     $globalSkillsDir = Join-Path $env:USERPROFILE ".config\opencode\skills"
     $removed = 0
 
-    if (Test-Path $globalSkillsDir) {
-        foreach ($name in $SkillNames) {
-            $dir = Join-Path $globalSkillsDir $name
-            $link = Join-Path $dir "SKILL.md"
-            if (Test-Path $link) {
-                Remove-Item -Force $link -ErrorAction SilentlyContinue
-                if ((Test-Path $dir) -and ((Get-ChildItem $dir -Force -ErrorAction SilentlyContinue | Measure-Object).Count -eq 0)) {
-                    Remove-Item -Force $dir -ErrorAction SilentlyContinue
-                }
-                $removed++
-                Write-Ok "Removed $name"
-            }
-        }
-    } else {
+    if (-not (Test-Path -LiteralPath $globalSkillsDir)) {
         Write-Info "No global OpenCode skills directory found"
+        return
     }
+
+    # Names recorded by setup.ps1 (covers dangling links whose target is gone)
+    $recorded = @{}
+    $manifest = Join-Path $globalSkillsDir $ManifestName
+    if (Test-Path -LiteralPath $manifest) {
+        Get-Content -LiteralPath $manifest -ErrorAction SilentlyContinue |
+            Where-Object { $_ -and $_.Trim() } |
+            ForEach-Object { $recorded[$_.Trim()] = $true }
+    }
+
+    foreach ($dir in Get-ChildItem -LiteralPath $globalSkillsDir -Directory -Force -ErrorAction SilentlyContinue) {
+        $link = Join-Path $dir.FullName "SKILL.md"
+        $target = Get-LinkTarget $link
+
+        $isOurs = ($target -like "*$SkillDirMarker*") -or $recorded.ContainsKey($dir.Name)
+        if (-not $isOurs) { continue }
+
+        Remove-Item -LiteralPath $link -Force -ErrorAction SilentlyContinue
+        # setup.ps1 adds a references link for skills that carry reference files.
+        # Remove it explicitly: a leftover entry makes the directory rmdir fail.
+        Remove-Item -LiteralPath (Join-Path $dir.FullName "references") -Force -Recurse -ErrorAction SilentlyContinue
+        Remove-Item -LiteralPath $dir.FullName -Force -Recurse -ErrorAction SilentlyContinue
+        $removed++
+        Write-Ok "Removed $($dir.Name)"
+    }
+
+    Remove-Item -LiteralPath $manifest -Force -ErrorAction SilentlyContinue
 
     if ($removed -gt 0) {
         Write-Ok "Removed $removed global skill link(s)"
