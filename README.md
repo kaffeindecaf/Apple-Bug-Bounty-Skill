@@ -45,6 +45,8 @@ Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned -Force
 .\setup.ps1
 ```
 
+`setup.ps1` / `uninstall.ps1` also run under PowerShell 7 on Linux and macOS (`pwsh -File setup.ps1`) if you prefer one script everywhere.
+
 The script looks at which agents you already have installed and wires up their config files. Pick one, or all of them.
 
 ### Ask questions
@@ -188,9 +190,13 @@ Some skills carry long-form recipes beside them. The skill body stays skimmable;
 
 ```bash
 python3 scripts/validate_skills.py     # frontmatter, cross-references, dead links, leak guard
+./scripts/test_installers.sh           # setup/uninstall round trip in a throwaway HOME
+./scripts/test_installers.sh --ps      # also the PowerShell pair (needs pwsh on PATH)
 ```
 
-Run it after any edit. CI runs the same script on every push and pull request.
+Run both after any edit. Neither writes outside a temp dir: the installer test builds its own sandbox `HOME`, stubs `opencode` on `PATH`, and removes the sandbox on exit. CI runs both on every push and pull request.
+
+The installer test asserts the things that have broken before: that 18 dirs get linked and all 18 get removed, that `references` symlinks travel with their skill and are cleaned up, that a skill dir the user installed by hand survives, that a second `setup` run changes nothing, and that dangling links are recoverable after the repo has been deleted.
 
 ### How the skills fit together
 
