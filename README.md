@@ -235,13 +235,9 @@ The skills are built from these. The table shows which technique each project us
 | usbliter8-fun | wh1te4ever | Checkm8 bootchain | 15.6+27 | Yes | Yes | Yes |
 | usbliter8-fun2 | 34306 | Checkm8 jailbreak | 27.0b2 | Yes | Yes | Yes |
 
-`usbliter8-fun` tracks its ramdisks through git-lfs (`projects/usbliter8-fun/.gitattributes`), and one of them is a 266 MB pointer. That breaks a plain `git clone` on any machine that has git-lfs installed: the smudge filter runs, cannot fetch the object, and git exits 128 with *"Clone succeeded, but checkout failed"*. `./setup` and `.\setup.ps1` therefore clone with the lfs filters disabled (`-c filter.lfs.process=`, `GIT_LFS_SKIP_SMUDGE=1`) — the toolkit is text only, so the payload is never needed. If you clone by hand and hit that error, use:
+The vendored copies carry real firmware binaries — `Kernelcache.img4`, `ISP.img4`, `SEP.img4`, the ssh and bootstrap tarballs — which is where the ~90 MB pack comes from. A clone is not small, and that is the price of the reference trees being self-contained.
 
-```bash
-GIT_LFS_SKIP_SMUDGE=1 git clone --depth 1 \
-  -c filter.lfs.process= -c filter.lfs.required=false \
-  https://github.com/kaffeindecaf/Apple-Bug-Bounty-Skill.git
-```
+One of those files used to be tracked through git-lfs, which is worse than merely large: a clone ran the smudge filter, could not fetch the object, and git exited 128 with *"Clone succeeded, but checkout failed"* — a dead install on every machine with git-lfs configured. That pointer and its `.gitattributes` rule are gone. `validate_skills.py` now fails on a git-lfs pointer, on a `filter=lfs` rule, or on any single file over 50 MB, so it cannot come back in quietly. `./setup` and `.\setup.ps1` still clone with the lfs filters disabled, because a re-added rule would otherwise resurrect the same trap.
 
 ## Research findings
 
