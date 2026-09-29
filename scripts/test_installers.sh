@@ -43,7 +43,11 @@ count_links()    { find "$(links_dir)" -mindepth 1 -maxdepth 1 -type d 2>/dev/nu
 count_refs()     { find "$(links_dir)" -maxdepth 2 -name references 2>/dev/null | wc -l | tr -d ' '; }
 count_dangling() { find "$(links_dir)" -xtype l 2>/dev/null | wc -l | tr -d ' '; }
 readable()       { head -1 "$1" >/dev/null 2>&1; }
-show_log()       { printf '  ---- %s (last 20 lines) ----\n' "$1"; tail -20 "$SANDBOX/$1" 2>/dev/null | sed 's/^/  | /'; }
+show_log() {
+    printf '  ---- %s ----\n' "$1"
+    grep -aiE 'fatal|error|denied|unable|failed|timed out|not found' "$SANDBOX/$1" 2>/dev/null | tail -8 | sed 's/^/  ! /'
+    tail -6 "$SANDBOX/$1" 2>/dev/null | sed 's/^/  | /'
+}
 
 # Caller sets SETUP_CMD / UNINSTALL_CMD to a command + args before calling.
 run_roundtrip() {
