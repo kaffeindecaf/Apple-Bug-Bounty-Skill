@@ -43,6 +43,7 @@ count_links()    { find "$(links_dir)" -mindepth 1 -maxdepth 1 -type d 2>/dev/nu
 count_refs()     { find "$(links_dir)" -maxdepth 2 -name references 2>/dev/null | wc -l | tr -d ' '; }
 count_dangling() { find "$(links_dir)" -xtype l 2>/dev/null | wc -l | tr -d ' '; }
 readable()       { head -1 "$1" >/dev/null 2>&1; }
+show_log()       { printf '  ---- %s (last 20 lines) ----\n' "$1"; tail -20 "$SANDBOX/$1" 2>/dev/null | sed 's/^/  | /'; }
 
 # Caller sets SETUP_CMD / UNINSTALL_CMD to a command + args before calling.
 run_roundtrip() {
@@ -51,7 +52,12 @@ run_roundtrip() {
     printf '\n[%s] setup -> uninstall round trip\n' "$label"
     ( cd "$REPO" && printf 'a\ny\n' | sandbox_env "${SETUP_CMD[@]}" ) > "$SANDBOX/$label.setup.log" 2>&1
     local rc=$?
-    if [ "$rc" -eq 0 ]; then ok "setup exit 0"; else fail "setup exited $rc (see $SANDBOX/$label.setup.log)"; fi
+    if [ "$rc" -eq 0 ]; then
+        ok "setup exit 0"
+    else
+        fail "setup exited $rc"
+        show_log "$label.setup.log"
+    fi
 
     check "linked dirs" "$(count_links)" "$EXPECTED_LINKS"
     check "references trees" "$(count_refs)" "$EXPECTED_REFS"
@@ -65,7 +71,12 @@ run_roundtrip() {
 
     ( cd "$REPO" && printf 'y\ny\n' | sandbox_env "${UNINSTALL_CMD[@]}" ) > "$SANDBOX/$label.uninstall.log" 2>&1
     rc=$?
-    if [ "$rc" -eq 0 ]; then ok "uninstall exit 0"; else fail "uninstall exited $rc (see $SANDBOX/$label.uninstall.log)"; fi
+    if [ "$rc" -eq 0 ]; then
+        ok "uninstall exit 0"
+    else
+        fail "uninstall exited $rc"
+        show_log "$label.uninstall.log"
+    fi
 
     check "remaining entries (foreign only)" "$(count_links)" "1"
     if [ -f "$(links_dir)/foreign-skill/SKILL.md" ]; then ok "foreign skill survived"; else fail "foreign skill was deleted"; fi
@@ -74,6 +85,7 @@ run_roundtrip() {
 }
 
 mkdir -p "$SANDBOX"
+printf 'sandbox: %s\n' "$SANDBOX"
 SETUP_CMD=( ./setup ); UNINSTALL_CMD=( ./uninstall )
 run_roundtrip "bash"
 
